@@ -1,6 +1,6 @@
 .\" Manpage for enkode.
 .\" Contact by.cmsc@gmail.com to correct errors or typos.
-.TH enkode 1 "23 January 2019" "5.0.1" "Executable bash script"
+.TH enkode 1 "23 March 2019" "5.0.2 alpha" "Executable bash script"
 .SH NAME
 .B enkode
 \- generate an analytical data score from a sound file.
@@ -10,8 +10,15 @@
 .SH DESCRIPTION
 .B enkode
 interprets a sound file in terms of numeric score devoted to the analysis or music synthesis. This script has been designed more specifically for undetermined pitch percussive music.
+.RS
 .RE
-The audio formats recognised are listed on the praat manual.
+.B enkode 
+displays a sequence of events which are defined for each line by the duration of the event, the loudness, the centroid, the loudness of the low pass filtering and the value of the first partial as f0.
+.RS
+.RE
+The audio formats recognised are listed on the 
+.B praat 
+manual.
 .SH OPTIONS
 .TP
 The three following options take as argument a number or a list of five numbers allowing to set the recursive discrimination as coefficient.
@@ -38,7 +45,7 @@ Convert the previous result to thrifty code.
 Convert the previous result to gray code.
 .RE
 .TP
-The options with + prepended allow to save the data files in the ~/Documents/enkode/<sampleName>/ directory:
+The options with + prepended allow to save the data files in ~/Documents/enkode/<sampleName>/:
 .RS
 .BR +profile
 .RE
@@ -72,7 +79,7 @@ Each line represents the spectrum dataset as re(Pa/Hz) usualy on 116 bins as the
 Allow to display some preliminary values for the segmentation in order to adjust some parameters if needed. 
 .RE
 .RS
-Note that the files +textgrid and +profile are automatically saved in the ~/Documents/enkode/<sampleName>/ directory.
+Note that the files +textgrid and +profile are automatically saved in ~/Documents/enkode/<sampleName>/.
 .RE
 .RE
 .TP

@@ -1,6 +1,6 @@
 #!/bin/bash
 ######################################################
-# enkode - version 5.0.1
+# enkode - version 5.0.2 alpha
 # author: Yann Ics (by.cmsc@gmail.com)
 # requires: Praat, SBCL, zip, bc
 ######################################################
@@ -20,7 +20,7 @@ usage(){
 }
 
 version(){
-    echo "Version 5.0.1"
+    echo "Version 5.0.2 alpha"
 }
 
 get_abs_filename() {
@@ -53,8 +53,16 @@ dirpraat='/Applications/Praat.app/Contents/MacOS/Praat'
 if [ ! -e $dirpraat ]
 then check_if_installed praat; dirpraat=`readlink -f $(which praat)`;
 fi
-check_if_installed sbcl
-dirsbcl=`readlink -f $(which sbcl)`
+dirsbcl='/opt/local/bin/sbcl'
+if [ ! -e $dirsbcl ]
+then dirsbcl='/usr/local/bin/sbcl'
+if [ ! -e $dirsbcl ]
+then dirsbcl=`pwd`/sbcl
+if [ ! -e $dirsbcl ]
+then check_if_installed sbcl; dirsbcl=`readlink -f $(which sbcl)`;
+fi
+fi
+fi
 check_if_installed bc
 check_if_installed zip
 
@@ -132,7 +140,7 @@ do
 	+profile) args="${args}-A ";;
 	+textgrid) args="${args}-B ";;
 	+spectrum) args="${args}-C ";;
-        -spectrum*) a=`getn $arg`;args="${args}-D ${a} ";;
+    -spectrum*) a=`getn $arg`;args="${args}-D ${a} ";;
 	-textgrid*) a=`getn $arg`;args="${args}-E ${a} ";;
 
 	--loudness-diff-thres*) a=`getn $arg`;args="${args}-a ${a} ";;
@@ -145,9 +153,9 @@ do
 	--as-tc*) a=`getn $arg`;args="${args}-T ${a} ";;
 	--as-gc*) a=`getn $arg`;args="${args}-G ${a} ";;
 	--par) args="${args}-p ";;
-        # pass through anything else
+    # pass through anything else
 	*) [[ "${arg:0:1}" == "-" ]] || delim="\""
-	   args="${args}${delim}${arg}${delim} ";;
+	args="${args}${delim}${arg}${delim} ";;
     esac
 done
 
@@ -156,7 +164,7 @@ eval set -- $args
 # now we can process with getopt
 while getopts "ABCD:E:a:b:c:d:e:I:T:G:p" opt; do
     case $opt in
-        A)  Fprofile=1 ;;
+    A)  Fprofile=1 ;;
 	B)  Ftextgrid=1 ;;
 	C)  Fspectrum=1 ;;
 	D)  sbw=$OPTARG
@@ -165,21 +173,21 @@ while getopts "ABCD:E:a:b:c:d:e:I:T:G:p" opt; do
 	    Ftextgrid=2 ;;
 	a)  dlt=$OPTARG ;;
 	b)  minlt=$OPTARG ;;
-        c)  maxlt=$OPTARG ;;
+    c)  maxlt=$OPTARG ;;
 	d)  fcut=$OPTARG ;;
 	e)  bfcs=$OPTARG ;;
 	I)  rec=$OPTARG
 	    out=1 ;;
-        T)  rec=$OPTARG
-            out=2 ;;
+    T)  rec=$OPTARG
+        out=2 ;;
 	G)  rec=$OPTARG
-            out=3 ;;
+        out=3 ;;
 	p)  Ftextgrid=1
 	    Fprofile=1
 	    out=5 ;;
 	*) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
-        ?) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
-        :) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
+    ?) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
+    :) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
     esac
 done
 
@@ -354,10 +362,19 @@ echo ";; read loudness profile file
 
 (defun mean-diff (seq-v &optional diff) 
   (let* ((xdy (mapcar #'abs (x->dx (mapcar #'cadr seq-v))))
-	 (dr (if diff diff 
-		(/ (loop for i in xdy sum i) (length xdy)))))
+	 (maxdiff (apply #'max xdy))
+	 (dr (if diff diff
+               ;; the mean value according to a logarithmic scale is equal to
+	       ;; 10^[log(maxval)*meanval/maxval]
+	       (expt
+		10 
+		(*
+		 (log maxdiff 10)
+		 (/
+		  (/ (loop for i in xdy sum i) (length xdy))
+		  maxdiff))))))
     (setf *mindiff* (apply #'min xdy))
-    (setf *maxdiff* (apply #'max xdy))
+    (setf *maxdiff* maxdiff)
     (setf *nextdiff* (get-next xdy dr))
     (setf *prevdiff* (opp (get-next (mapcar #'opp xdy) (opp dr))))
     dr))
@@ -785,13 +802,19 @@ fi
 ##
 NOW=$(date +"[%T] [%D]")
 
-#noe=`awk '/./{line=$0} END{print line}' $workDir/.tmp$START/$name.TextGrid`
-#noe=`echo $noe | tr -d '"'`
-noe=`tail -1 $workDir/.tmp$START/$name.TextGrid`
+if [ $Ftextgrid == 2 ]
+then
+tmptg=$dirtg
+else
+tmptg=$workDir/.tmp$START/$name.TextGrid 
+fi
+noe=`tail -1 $tmptg`
 if [ $noe == "\"\"" ]
-then noe=`tail -4 $workDir/.tmp$START/$name.TextGrid | head -1`
+then noe=`tail -4 $tmptg | head -1`
 fi
 noe=`echo $noe | tr -d '"'`
+if [ $Ftextgrid != 2 ]
+then
 minltt=`cat $workDir/.tmp$START/minlt`
 maxltt=`cat $workDir/.tmp$START/maxlt`
 dltt=`cat $workDir/.tmp$START/dlt`
@@ -802,19 +825,24 @@ prevdiff=`cat $workDir/.tmp$START/prevdiff`
 nextmin=`cat $workDir/.tmp$START/nextmin`
 nextmax=`cat $workDir/.tmp$START/nextmax`
 totalduration=`cat $workDir/.tmp$START/total-duration`
-
+fi
 version > $workDir/$name/.info
 echo "$carg
 ----------------------------------------------------------
 fcut = $fcut Hz
 fsmooth = $bfcs Hz
-Number of events = $noe
-LoudnessMinThres:$minltt [ < $nextmin ]
+Number of events = $noe" >> $workDir/$name/.info
+if [ $Ftextgrid != 2 ]
+then
+echo "LoudnessMinThres:$minltt [ < $nextmin ]
 LoudnessMaxThres:$maxltt [ > $nextmax ]
 [ min:$mindiff | $prevdiff < ] LoudnessDiffThres:$dltt [ < $nextdiff | max:$maxdiff ] 
 ----------------------------------------------------------
-Total duration = $totalduration seconds
-$NOW" >> $workDir/$name/.info
+Total duration = $totalduration seconds" >> $workDir/$name/.info
+else
+echo "----------------------------------------------------------" >> $workDir/$name/.info
+fi
+echo "$NOW" >> $workDir/$name/.info
 echo "START --- $START" >> $workDir/$name/.info
 
 if [ $Fprofile == 1 ]
