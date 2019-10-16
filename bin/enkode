@@ -1,6 +1,6 @@
 #!/bin/bash
 ######################################################
-# enkode - version 5.0.2 alpha
+# enkode - version 6.0.1 alpha
 # author: Yann Ics (by.cmsc@gmail.com)
 # requires: Praat, SBCL, zip, bc
 ######################################################
@@ -16,16 +16,16 @@ function getn(){
 }
 
 usage(){
-   echo "Usage: enkode [OPTION(S)[ value|=value]] sound_file"
+    echo "Usage: enkode [OPTION(S)[ value|=value]] sound_file"
 }
 
 version(){
-    echo "Version 5.0.2 alpha"
+    echo "Version 6.0.1 alpha"
 }
 
 get_abs_filename() {
-  # $1 : relative filename
-  echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+    # $1 : relative filename
+    echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
 }
 
 # check if some needed command line are installed
@@ -56,12 +56,12 @@ fi
 dirsbcl='/opt/local/bin/sbcl'
 if [ ! -e $dirsbcl ]
 then dirsbcl='/usr/local/bin/sbcl'
-if [ ! -e $dirsbcl ]
-then dirsbcl=`pwd`/sbcl
-if [ ! -e $dirsbcl ]
-then check_if_installed sbcl; dirsbcl=`readlink -f $(which sbcl)`;
-fi
-fi
+     if [ ! -e $dirsbcl ]
+     then dirsbcl=`pwd`/sbcl
+	  if [ ! -e $dirsbcl ]
+	  then check_if_installed sbcl; dirsbcl=`readlink -f $(which sbcl)`;
+	  fi
+     fi
 fi
 check_if_installed bc
 check_if_installed zip
@@ -104,13 +104,11 @@ carg=`echo $0 $@` # for error.log
 # ---------------------------------------------
 # stdout
 out=0
+dat=0
+outdir=0
 
 # data file(s)
-Fprofile=0
 Ftextgrid=0
-Fspectrum=0
-
-sbw=5000/116
 
 # Miminal loudness threshold in sone units
 minlt=nil
@@ -137,57 +135,56 @@ for arg
 do
     delim=""
     case "$arg" in
-	+profile) args="${args}-A ";;
-	+textgrid) args="${args}-B ";;
-	+spectrum) args="${args}-C ";;
-    -spectrum*) a=`getn $arg`;args="${args}-D ${a} ";;
-	-textgrid*) a=`getn $arg`;args="${args}-E ${a} ";;
-
+	--spectrum) args="${args}-s ";;
+	--textgrid*) a=`getn $arg`;args="${args}-t ${a} ";;	
 	--loudness-diff-thres*) a=`getn $arg`;args="${args}-a ${a} ";;
 	--loudness-min-thres*) a=`getn $arg`;args="${args}-b ${a} ";;
 	--loudness-max-thres*) a=`getn $arg`;args="${args}-c ${a} ";;
 	--cutoff-frequency*) a=`getn $arg`;args="${args}-d ${a} ";;
 	--smooth-frequency*) a=`getn $arg`;args="${args}-e ${a} ";;
-
+	--outdir*) a=`getn $arg`;args="${args}-o ${a} ";;	
 	--as-int*) a=`getn $arg`;args="${args}-I ${a} ";;
 	--as-tc*) a=`getn $arg`;args="${args}-T ${a} ";;
 	--as-gc*) a=`getn $arg`;args="${args}-G ${a} ";;
 	--par) args="${args}-p ";;
-    # pass through anything else
+	# pass through anything else
 	*) [[ "${arg:0:1}" == "-" ]] || delim="\""
-	args="${args}${delim}${arg}${delim} ";;
+	   args="${args}${delim}${arg}${delim} ";;
     esac
 done
 
 # reset the translated args
 eval set -- $args
 # now we can process with getopt
-while getopts "ABCD:E:a:b:c:d:e:I:T:G:p" opt; do
+while getopts "st:a:b:c:d:e:o:I:T:G:p" opt; do
     case $opt in
-    A)  Fprofile=1 ;;
-	B)  Ftextgrid=1 ;;
-	C)  Fspectrum=1 ;;
-	D)  sbw=$OPTARG
-	    out=4 ;;
-	E)  dirtg=$OPTARG
-	    Ftextgrid=2 ;;
+	s)  dat=1 ;;
+	t)  dirtg=$OPTARG
+	    Ftextgrid=1 ;;
 	a)  dlt=$OPTARG ;;
 	b)  minlt=$OPTARG ;;
-    c)  maxlt=$OPTARG ;;
+	c)  maxlt=$OPTARG ;;
 	d)  fcut=$OPTARG ;;
 	e)  bfcs=$OPTARG ;;
+	o)  if [ $OPTARG == "true" ] || [ $OPTARG == "t" ]
+	    then
+	 	outdir=$workDir/$name
+	    elif [ -d "$OPTARG" ]
+	    then
+		outdir=${OPTARG%/}
+	    else
+		:
+	    fi ;;
 	I)  rec=$OPTARG
 	    out=1 ;;
-    T)  rec=$OPTARG
-        out=2 ;;
+	T)  rec=$OPTARG
+	    out=2 ;;
 	G)  rec=$OPTARG
-        out=3 ;;
-	p)  Ftextgrid=1
-	    Fprofile=1
-	    out=5 ;;
+	    out=3 ;;
+	p)  out=4 ;;
 	*) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
-    ?) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
-    :) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
+	?) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
+	:) echo "Check option(s) and/or argument(s) ..."; exit 1 ;;
     esac
 done
 
@@ -202,30 +199,30 @@ START=`perl -MTime::HiRes -e 'print Time::HiRes::time(),"\n"'`
 NEW=0
 
 if [ -d "$workDir/$name" ]; then
-	cd $workDir/$name
+    cd $workDir/$name
     rm -R -- */ 2> /dev/null
-
-  if [ -f $workDir/$name/info ]
-	then
-	zipname=`grep "START ---" $workDir/$name/info | awk '{print $3}'`
-        mkdir $workDir/$name/$zipname; mv $workDir/$name/info $workDir/$name/$zipname/
-	elif [ -f $workDir/$name/.info ]
-	then
+    
+    if [ -f $workDir/$name/$name.info ]
+    then
+	zipname=`grep "START ---" $workDir/$name/$name.info | awk '{print $3}'`
+        mkdir $workDir/$name/$zipname; mv $workDir/$name/$name.info $workDir/$name/$zipname/
+    elif [ -f $workDir/$name/.info ]
+    then
 	zipname=`grep "START ---" $workDir/$name/.info | awk '{print $3}'`
 	mkdir $workDir/$name/$zipname; rm $workDir/$name/.info
-	else
+    else
 	NEW=1
-	fi
-
-  if [ -f $workDir/error.log ]
-	then
+    fi
+    
+    if [ -f $workDir/error.log ]
+    then
         mv $workDir/error.log $workDir/$name/$zipname/
-	fi
-	
-	find $workDir/$name -mindepth 1 -maxdepth 1 ! -name '*.zip' -type f -print0 | xargs -0 -I {} mv {} $workDir/$name/$zipname/
+    fi
+
+    find $workDir/$name -mindepth 1 -maxdepth 1 ! -name '*.zip' -type f -print0 | xargs -0 -I {} mv {} $workDir/$name/$zipname/
 else
-	mkdir $workDir/$name
-	NEW=1
+    mkdir $workDir/$name
+    NEW=1
 fi
 
 mkdir $workDir/.tmp$START
@@ -239,31 +236,47 @@ fi
 
 # ---------------------------------------------
 # script PRAAT
-if [ $Ftextgrid != 2 ]
+if [ $Ftextgrid != 1 ]
 then
 echo "form Get loudness profil
 	sentence file ...
 endform
 
-        Read from file... 'file$'
-	current_sound$ = selected$ (\"Sound\")
-	     td = Get total duration
-             writeFileLine: \"total-duration\", 'td'
-	select Sound 'current_sound$'
-	do (\"To Cochleagram...\", 0.01, 0.1, 0.03, 0.03)
-	do (\"To Matrix\")
+procedure mk_profile .td .file$
+a = 0
+tps = 0
+while 'tps' < '.td'
+  selectObject: \"Cochleagram cochlea\"
+  tps = a*0.01
+  To Excitation (slice): 'tps'
+  dat = do(\"Get loudness\")
+  fileappend 'defaultDirectory$'/'.file$' 'dat' 'newline$'
+  selectObject: \"Excitation cochlea\"
+  Remove
+  a = a+1
+endwhile
+selectObject: \"Cochleagram cochlea\"
+Remove
+endproc
 
-ncolumn = do(\"Get number of columns\")
+filedelete 'defaultDirectory$'/'current_sound$'.profile
+filedelete 'defaultDirectory$'/'current_sound$'.bass
+Read from file... 'file$'
+current_sound$ = selected$ (\"Sound\")
+td = Get total duration
+writeFileLine: \"total-duration\", 'td'
+select Sound 'current_sound$'
+do (\"To Cochleagram...\", 0.01, 0.1, 0.03, 0.03)
+Rename: \"cochlea\"
 
-filedelete 'defaultDirectory$'/'current_sound$'.profil
-	for a  from 1 to ncolumn
-		selectObject: \"Cochleagram 'current_sound$'\"
-                To Excitation (slice): a*0.01
-                dat = do(\"Get loudness\")
-		fileappend 'defaultDirectory$'/profile 'dat' 'newline$'
-                selectObject: \"Excitation 'current_sound$'\"
-                Remove
-	endfor
+call mk_profile td profile
+
+select Sound 'current_sound$'
+do (\"Filter (stop Hann band)...\", $fcut, 0, 50)
+do (\"To Cochleagram...\", 0.01, 0.1, 0.03, 0.03)
+Rename: \"cochlea\"
+
+call mk_profile td bass
 
 select all
 Remove" > $workDir/.tmp$START/cochlea.praat
@@ -272,7 +285,7 @@ $dirpraat --run $workDir/.tmp$START/cochlea.praat $soundpath $seg
 
 # ---------------------------------------------
 echo ";; read loudness profile file
- 
+
 (defun read-file (file)
   (mapcar #'read-from-string
 	  (with-open-file (in-stream file
@@ -281,15 +294,15 @@ echo ";; read loudness profile file
 	    (loop with length = (file-length in-stream)
 	       while (< (file-position in-stream) length)
 	       collect (read-line in-stream)))))
- 
+
 ;; format data to a valid sequence
- 
+
 (defun mk-seq (profil &optional (tspa 0.01))
   (let (r) (dotimes (i (length profil) r) (push (* tspa i) r))
        (mapcar #'list (reverse r) profil)))
- 
+
 ;; get primitive
- 
+
 (defun minmax (seq)
   (let ((r (list (cons 0 (car seq)))))
     (loop for i in (cdr seq)
@@ -298,18 +311,18 @@ echo ";; read loudness profile file
 	       ((< (caddar r) (cadr i)) (push (cons 1 i) r))
 	       ((> (caddar r) (cadr i)) (push (cons -1 i) r))))
     r))
- 
+
 ;; get peaks and valleys
- 
+
 (defun stream-minmax (seq)
   (let ((r (list (car seq))))
     (loop for e in (cdr seq)
        do
 	 (when (not (or (equalp (car e) (caar r)) (equalp (car e) 0))) (push e r))) (append (last seq) r)))
- 
+
 (defun stream-v (seq)
   (mapcar #'cdr (stream-minmax (minmax seq))))
- 
+
 (defun peaks (seq)
   (let ((r)
 	(m-lst (stream-minmax (minmax seq))))
@@ -317,7 +330,7 @@ echo ";; read loudness profile file
     (if (= -1 (caadr m-lst))
 	(cons (cdar m-lst) (mapcar #'cdr (reverse r)))
         (mapcar #'cdr (reverse r)))))
- 
+
 (defun valleys (seq)
   (let ((r)
 	(m-lst (stream-minmax (minmax seq))))
@@ -325,7 +338,7 @@ echo ";; read loudness profile file
     (if (= 1 (caadr m-lst))
 	(cons (cdar m-lst) (mapcar #'cdr (reverse r)))
         (mapcar #'cdr (reverse r)))))
- 
+
 ;; filter the streaming sequence according the conditions:
 ;;   1 - first item and last item have to be a valley [rem-peak]
 ;;   2 - the absolute value of the difference between two consecutive items has to be superior or equal to the threshold defined by *dlt* (mean-diff by default) [diff-filtering]
@@ -351,6 +364,13 @@ echo ";; read loudness profile file
 	  (rem-peak (reverse (cdr seq-v)) t)
 	  (rem-peak (reverse seq-v) t))))
 
+(defun rem-adj-dup (list)
+  (loop for i in list
+     and prev = nil then i
+     for get = t then (not (equalp i prev))
+     when get
+     collect i))
+
 (defun x->dx (lst)
   (mapcar #'(lambda (x) (apply #'- (reverse x))) (butlast (maplist #'(lambda (x) (list (car x) (cadr x))) lst))))
 
@@ -360,14 +380,14 @@ echo ";; read loudness profile file
 
 (defun opp (n) (* -1 n))
 
-(defun mean-diff (seq-v &optional diff) 
-  (let* ((xdy (mapcar #'abs (x->dx (mapcar #'cadr seq-v))))
+(defun mean-diff (seq-v &optional diff)
+  (let* ((xdy (mapcar #'abs (x->dx (rem-adj-dup (mapcar #'cadr seq-v)))))
 	 (maxdiff (apply #'max xdy))
 	 (dr (if diff diff
                ;; the mean value according to a logarithmic scale is equal to
 	       ;; 10^[log(maxval)*meanval/maxval]
 	       (expt
-		10 
+		10
 		(*
 		 (log maxdiff 10)
 		 (/
@@ -385,7 +405,7 @@ echo ";; read loudness profile file
     (setf *dlt* dlt)
     (loop for i in (cdr seq) do (if (null r) (push i r) (if (>= (abs (- (cadr i) (cadar r))) dlt) (push i r) (setf r (cdr r)))))
     (reverse r)))
-	 
+
 (defun min-filtering (seq-v &optional min)
   (let ((minlt (if min min (reduce #'min (mapcar #'cadr (loop for i from 1 to (- (length seq-v) 2) by 2 collect (nth i seq-v))))))
 	r)
@@ -393,7 +413,7 @@ echo ";; read loudness profile file
     (setf *nextmin* (get-next (mapcar #'cadr (peaks seq-v)) minlt))
     (loop for s in seq-v for i from 0 do (if (oddp i) (when (>= (cadr s) minlt) (push s r)) (push s r)))
     (stream-v (reverse r))))
-  
+
 (defun max-filtering (seq-v &optional max)
   (let ((maxlt (if max max (reduce #'max (mapcar #'cadr (loop for i from 0 to (- (length seq-v) 1) by 2 collect (nth i seq-v))))))
 	r)
@@ -405,8 +425,15 @@ echo ";; read loudness profile file
 	  res
 	  (max-filtering res max)))))
 
+(defun merge-event-if-less-than (seq &optional (threshold 0.05))
+  (let ((r (list (car seq))))
+    (loop for i in (cdr seq)
+       do
+	 (when (>= (- (car i) (caar r)) threshold) (push i r)))
+    (reverse r)))
+
 ;; write TextGrid file
- 
+
 (defun subgroup (lst)
   (let (r)
     (loop for i from 0 to (- (length lst) 2)
@@ -434,7 +461,7 @@ echo ";; read loudness profile file
 	 (if (eq (car i) nil)
 	     (format stream \"~D~&~D~&\\\"\\\"~&\" (cadr i) (caddr i))
 	     (format stream \"~D~&~D~&\\\"~D\\\"~&\" (cadr i) (caddr i) (car i))))))
- 
+
 ;;-------------------" > $workDir/.tmp$START/segmentation.lisp
 
 # add parameters for evaluation
@@ -444,7 +471,7 @@ echo "(let ((nn (loop for i in *profil* until (> i 1.7) count i)))
   (setf *profil* (append (make-list nn :initial-element 100) (nthcdr nn *profil*))))" >> $workDir/.tmp$START/segmentation.lisp
 
 echo "(defparameter *total-duration* (car (read-file \"$workDir/.tmp$START/total-duration\")))" >> $workDir/.tmp$START/segmentation.lisp
-echo "(defparameter *seq* (max-filtering (min-filtering (diff-filtering (rem-peak (stream-v (mk-seq *profil*))) $dlt) $minlt) $maxlt))" >> $workDir/.tmp$START/segmentation.lisp
+echo "(defparameter *seq* (merge-event-if-less-than (max-filtering (min-filtering (diff-filtering (rem-peak (stream-v (mk-seq *profil*))) $dlt) $minlt) $maxlt)))" >> $workDir/.tmp$START/segmentation.lisp
 echo "(mk-praat-file-textgrid (add-end-time (subgroup (mapcar #'car (loop for i from 0 to (1- (length *seq*)) by 2 collect (nth i *seq*)))) *total-duration*) *total-duration* \"$workDir/.tmp$START/$name.TextGrid\")" >> $workDir/.tmp$START/segmentation.lisp
 
 echo "(with-open-file (str \"$workDir/.tmp$START/minlt\"
@@ -497,7 +524,7 @@ $dirsbcl --script $workDir/.tmp$START/segmentation.lisp
 # ---------------------------------------------
 fi
 
-if [ $out != 5 ]
+if [ $out != 4 ]
 then
 # script PRAAT
 echo "form Get values
@@ -509,143 +536,141 @@ endform
 
 procedure get_first_partial
 	i = 1
-        up = 0
+  up = 0
 	f0 = 0
-        nbs = Get number of bins
+  nbs = Get number of bins
 	repeat
 		val1 = Get real value in bin: 'i'
 		val2 = Get real value in bin: 'i'+1
 		i = i + 1
-	        if 'val1' - 'val2' > 0 and 'up' = 0
-		   up = 0
-                else
-                   up = 1
-                endif
+	  if 'val1' - 'val2' > 0 and 'up' = 0
+		  up = 0
+    else
+      up = 1
+    endif
 		if  'val1' > 'val2' and 'up' = 1 and 'f0' = 0
-		   f0 = Get frequency from bin number: 'i'-1
+		  f0 = Get frequency from bin number: 'i'-1
 		endif
 	until 'i' = 'nbs'
 endproc" > $workDir/.tmp$START/values.praat
 
 # --------------------------------------------
-if [ $out == 4 ] || [ $Fspectrum == 1 ]
+if [ $dat == 1 ]
 then
-sbin=`echo $sbw | cut -d'/' -f2`
 #+++++++++++++++++++++++++++++++++++++++++++++
 echo "procedure mk_spectrum
 	i = 1
-        val=0
+  val=0
 	step=1
 	div=1
-	bw=$sbw
-        nbs = Get number of bins
 	repeat
 		val1 = Get real value in bin: 'i'
 		fi = Get frequency from bin number: 'i'
 		i = 'i' + 1
-                fact='bw' * 'step'
-
-	        if 'fi' > 'fact'
-		   
-			res=('val1' + 'val')/'div' 
-			fileappend 'defaultDirectory$'/spec 'res' 
+    fact=(5000/116) * 'step'
+	  if 'fi' > 'fact'
+      res=('val1' + 'val')/'div'
+			fileappend 'defaultDirectory$'/spec 'res' " "
 			val = 'val1'
-  			div=1
+  		div=1
 			step = 'step' + 1
-                else
-                	val ='val1' + 'val'
+    else
+      val ='val1' + 'val'
 			div='div'+1
-                endif
-
-	until 'step' = $sbin+1
+    endif
+	until 'step' = 116+1
 endproc" >> $workDir/.tmp$START/values.praat
 #+++++++++++++++++++++++++++++++++++++++++++++
 fi
 
-echo "Read from file... 'soundfile$'
+echo "procedure mk_loudness .sound$
+	select Sound '.sound$'
+	To Cochleagram: 0.01, 0.1, 0.03, 0.03
+	res = 0
+	tps = 0
+	i = 1
+		while 'tps' < 'duration'
+			select Cochleagram '.sound$'
+			To Excitation (slice): 'tps'
+			loudness = Get loudness
+			array [i] = 'loudness'
+			tps = 'tps' + 0.01
+			i = 'i' + 1
+		endwhile
+	sumnum = 0
+	sumden = 0
+	rev = 'i'
+		for a from 1 to 'i'-1
+			sumnum = 'sumnum' + (array['a'] * ('rev'-'a'))
+			sumden = 'sumden' + 'a'
+			select Excitation '.sound$'
+			Remove
+		endfor
+	res = sumnum/sumden
+	select Cochleagram '.sound$'
+	Remove
+	select Sound '.sound$'
+	Remove
+endproc
+
+Read from file... 'soundfile$'
 current_sound$ = selected$ (\"Sound\")
 Read from file... 'textgrid$'
 current_textgrid$ = selected$ (\"TextGrid\")
 
 filedelete 'defaultDirectory$'/res
-filedelete 'defaultDirectory$'/fft
+filedelete 'defaultDirectory$'/spec
 
 select TextGrid 'current_textgrid$'
 n = Count intervals where: 1, \"is not equal to\", \"\"
-    	for nn from 1 to n
+for nn from 1 to n
 
 	select Sound 'current_sound$'
 	plus TextGrid 'current_textgrid$'
 	Extract intervals where: 1, \"no\", \"is equal to\", \"'nn'\"
 
-		duration = Get total duration
+	duration = Get total duration
 
-        	do (\"To Spectrum...\", \"yes\")
-        	centroid = Get centre of gravity... 2
-		if (centroid = undefined)
-			centroid = 'fcut'/2
-		endif
+  do (\"To Spectrum...\", \"yes\")
 
-		Cepstral smoothing: 'foss'" >> $workDir/.tmp$START/values.praat
+  centroid = Get centre of gravity... 2
+	if (centroid = undefined)
+    centroid = 'fcut'/2
+	endif
+
+	Cepstral smoothing: 'foss'" >> $workDir/.tmp$START/values.praat
 
 # --------------------------------------------
-if [ $out == 4 ] || [ $Fspectrum == 1 ]
+if [ $dat == 1 ]
 then
 #+++++++++++++++++++++++++++++++++++++++++++++
 echo "call mk_spectrum
 fileappend 'defaultDirectory$'/spec 'newline$'" >> $workDir/.tmp$START/values.praat
 #+++++++++++++++++++++++++++++++++++++++++++++
-fi		
+fi
 
-		echo "call get_first_partial
-		
-		if (f0 = 0)
-			f0 = 'fcut'/2
-		endif
-
-		select Spectrum 'current_sound$'_'nn'_1
-		Remove
-
-      	select Sound 'current_sound$'_'nn'_1
-
-        nocheck To Cochleagram: 0.01, 0.1, 0.03, 0.03
-	nocheck To Excitation (slice): 0
-	loudness = nocheck Get loudness
-
-        if (loudness = undefined)
-                loudness = 1.6
-		bass = 1.6
-	select Sound 'current_sound$'_'nn'_1
-	Remove
-        else
-
-	select Cochleagram 'current_sound$'_'nn'_1
-	plus Excitation 'current_sound$'_'nn'_1
-	Remove
-	
-	select Sound 'current_sound$'_'nn'_1
-      	do (\"Filter (stop Hann band)...\", 'fcut', 0, 50)
-
-      	select Sound 'current_sound$'_'nn'_1_band
-
-	To Cochleagram: 0.01, 0.1, 0.03, 0.03
-	To Excitation (slice): 0
-	bass = Get loudness
-
-      	appendFileLine(\"res\", 'duration', \" \", 'loudness', \" \", 'centroid', \" \", 'bass', \" \", 'f0')
-
-	select Spectrum 'current_sound$'_'nn'_1
-      	plus Sound 'current_sound$'_'nn'_1
-      	plus Sound 'current_sound$'_'nn'_1_band
-        plus Cochleagram 'current_sound$'_'nn'_1_band
-        plus Excitation 'current_sound$'_'nn'_1_band
-      	Remove
-	endif
-	endfor
+echo "call get_first_partial
+				if (f0 = 0)
+					f0 = 'fcut'/2 # this is completely arbitrary
+				endif
+      select Spectrum 'current_sound$'_'nn'_1
+			Remove
+			select Spectrum 'current_sound$'_'nn'_1
+			Remove
+			select Sound 'current_sound$'_'nn'_1
+			Rename: \"event\"
+			Filter (stop Hann band): 100, 0, 50
+			Rename: \"bass\"
+			call mk_loudness bass
+			loudbass = res
+			call mk_loudness event
+			loudness = res
+	    appendFileLine(\"res\", 'duration', \" \", 'f0', \" \", 'centroid', \" \", 'loudness', \" \", 'loudbass')
+  endfor
 select all
 Remove" >> $workDir/.tmp$START/values.praat
 
-if [ $Ftextgrid == 2 ]
+if [ $Ftextgrid == 1 ]
 then
 $dirpraat --run $workDir/.tmp$START/values.praat $soundpath $dirtg $fcut $bfcs
 else
@@ -654,7 +679,7 @@ fi
 fi
 
 # ---------------------------------------------
-if [ $out != 0 ] && [ $out != 4 ] && [ $out != 5 ]
+if [ $out == 1 ] || [ $out == 2 ] || [ $out == 3 ]
 then
 echo ";; read data file
 
@@ -665,7 +690,7 @@ echo ";; read data file
     (loop with length = (file-length in-stream)
        while (< (file-position in-stream) length)
        collect (read-line in-stream))))
- 
+
 (defun string-to-list (string)
   (let ((the-list nil)
         (end-marker (gensym)))
@@ -676,12 +701,12 @@ echo ";; read data file
             (setq the-list
                   (append the-list (list returned-value)))
             (setq string (subseq string end-position))))))
- 
+
 ;; convert to thrifty code
- 
+
 (defun replace-a (new n lst)
   (mapcar #'(lambda (a) (if (= (setq n (1- n)) -1) new a)) lst))
- 
+
 (defun >thrifty-code (a digit)
   (reverse (replace-a 1 (1- a) (make-list digit :initial-element 0))))
 
@@ -707,7 +732,7 @@ echo ";; read data file
   (fill-lst (10->n (logxor n (ash n -1)) 2) digit))
 
 ;; a recursive discrimination
- 
+
 (defun nearest (a alst)
   (let ((al (sort (copy-tree alst) #'>)))
     (cadar (sort (loop for i in al collect (list (abs (- i a)) i)) #'< :key #'car))))
@@ -724,12 +749,12 @@ echo ";; read data file
   (let (r) (loop for i in lst do
 		(if (listp i) (dolist (e i r) (push e r)) (push nil r)))
        (reverse r)))
- 
+
 (defun mean (lst)
   (if (listp (car lst))
       (list (mean (mapcar #'car lst)) (mean (mapcar #'cadr lst)))
       (/ (reduce #'+ lst) (length lst))))
- 
+
 (defun split-mean-lst (lst)
   (if (= 1 (length (remove-duplicates lst)))
       (list lst (list lst))
@@ -741,7 +766,7 @@ echo ";; read data file
 	(if (or (null msup) (null minf))
 	    (list lst (list lst))
 	    (list (list minf m msup) (list subinf subsup))))))
-  
+
 (defun mk-attract (lst n &optional r)
   (if (< (length (remove-duplicates lst)) (1- (expt 2 n))) (mk-attract lst (1- n))
       (if (>= (length (car r)) (1- (expt 2 n))) (sort (car r) #'>)
@@ -757,7 +782,7 @@ echo ";; read data file
       ((= 2 out) (loop for i in tmp collect (>thrifty-code i (apply #'max tmp))))
       ((= 3 out) (loop for i in tmp collect (>gray-code i (length (>gray-code (apply #'max tmp) 1)))))
       (t data))))
-    
+
 ;;-------------------
 (defun flatten (lst)
   (if (endp lst)
@@ -800,60 +825,54 @@ fi
 ##
 ##
 ##
-NOW=$(date +"[%T] [%D]")
+NOW=$(date +"[%T] [%g/%m/%y]")
 
-if [ $Ftextgrid == 2 ]
+if [ $Ftextgrid == 1 ]
 then
-tmptg=$dirtg
+    tmptg=$dirtg
 else
-tmptg=$workDir/.tmp$START/$name.TextGrid 
+    tmptg=$workDir/.tmp$START/$name.TextGrid
 fi
 noe=`tail -1 $tmptg`
 if [ $noe == "\"\"" ]
 then noe=`tail -4 $tmptg | head -1`
 fi
 noe=`echo $noe | tr -d '"'`
-if [ $Ftextgrid != 2 ]
+if [ $Ftextgrid != 1 ]
 then
-minltt=`cat $workDir/.tmp$START/minlt`
-maxltt=`cat $workDir/.tmp$START/maxlt`
-dltt=`cat $workDir/.tmp$START/dlt`
-mindiff=`cat $workDir/.tmp$START/mindiff`
-maxdiff=`cat $workDir/.tmp$START/maxdiff`
-nextdiff=`cat $workDir/.tmp$START/nextdiff`
-prevdiff=`cat $workDir/.tmp$START/prevdiff`
-nextmin=`cat $workDir/.tmp$START/nextmin`
-nextmax=`cat $workDir/.tmp$START/nextmax`
-totalduration=`cat $workDir/.tmp$START/total-duration`
+    minltt=`cat $workDir/.tmp$START/minlt`
+    maxltt=`cat $workDir/.tmp$START/maxlt`
+    dltt=`cat $workDir/.tmp$START/dlt`
+    mindiff=`cat $workDir/.tmp$START/mindiff`
+    maxdiff=`cat $workDir/.tmp$START/maxdiff`
+    nextdiff=`cat $workDir/.tmp$START/nextdiff`
+    prevdiff=`cat $workDir/.tmp$START/prevdiff`
+    nextmin=`cat $workDir/.tmp$START/nextmin`
+    nextmax=`cat $workDir/.tmp$START/nextmax`
+    totalduration=`cat $workDir/.tmp$START/total-duration`
 fi
 version > $workDir/$name/.info
-echo "$carg
-----------------------------------------------------------
-fcut = $fcut Hz
-fsmooth = $bfcs Hz
-Number of events = $noe" >> $workDir/$name/.info
-if [ $Ftextgrid != 2 ]
-then
-echo "LoudnessMinThres:$minltt [ < $nextmin ]
-LoudnessMaxThres:$maxltt [ > $nextmax ]
-[ min:$mindiff | $prevdiff < ] LoudnessDiffThres:$dltt [ < $nextdiff | max:$maxdiff ] 
-----------------------------------------------------------
-Total duration = $totalduration seconds" >> $workDir/$name/.info
-else
+echo "$carg" >> $workDir/$name/.info
 echo "----------------------------------------------------------" >> $workDir/$name/.info
+echo "fcut = $fcut Hz" >> $workDir/$name/.info
+echo "fsmooth = $bfcs Hz" >> $workDir/$name/.info
+echo "Number of events = $noe" >> $workDir/$name/.info
+if [ $Ftextgrid != 1 ]
+then
+    echo "LoudnessMinThres:$minltt [ < $nextmin ]" >> $workDir/$name/.info
+    echo "LoudnessMaxThres:$maxltt [ > $nextmax ]" >> $workDir/$name/.info
+    echo "[ min:$mindiff | $prevdiff < ] LoudnessDiffThres:$dltt [ < $nextdiff | max:$maxdiff ] " >> $workDir/$name/.info
+    echo "----------------------------------------------------------" >> $workDir/$name/.info
+    echo "Total duration = $totalduration seconds" >> $workDir/$name/.info
+else
+    echo "----------------------------------------------------------" >> $workDir/$name/.info
 fi
 echo "$NOW" >> $workDir/$name/.info
 echo "START --- $START" >> $workDir/$name/.info
 
-if [ $Fprofile == 1 ]
-then mv $workDir/.tmp$START/profile $workDir/$name
-fi
+paste $workDir/.tmp$START/profile $workDir/.tmp$START/bass > $workDir/$name/$name.profile
 
-if [ $Fspectrum == 1 ] && [ $out != 4 ]
-then mv $workDir/.tmp$START/spec $workDir/$name/spectrum
-fi
-
-if [ $Ftextgrid == 1 ]
+if [ $Ftextgrid == 0 ]
 then mv $workDir/.tmp$START/$name.TextGrid $workDir/$name
 fi
 
@@ -865,55 +884,75 @@ fi
 # enkode has failed. More information about this failure is listed in error.log file.
 if [[ -s $workDir/.tmp$START/error.log ]]
 then
-	echo "... error during process, check error.log ..." >> $workDir/$name/.info
+    echo "... error during process, check error.log ..." >> $workDir/$name/.info
     cat $workDir/$name/.info > $workDir/error.log
-echo "----------------------------------------------------------" >> $workDir/error.log
+    echo "----------------------------------------------------------" >> $workDir/error.log
     #*****************************
     stoptime=`perl -MTime::HiRes -e 'print Time::HiRes::time(),"\n"'`
     echo "stoptime --- $stoptime" >> $workDir/error.log
     #*****************************
-echo "----------------------------------------------------------" >> $workDir/error.log
-cat $workDir/.tmp$START/error.log >> $workDir/error.log
-echo "----------------------------------------------------------
-ls -laR $workDir/*" >> $workDir/error.log
-ls -laR $workDir/* >> $workDir/error.log
-rm -rf $workDir/.tmp*
-echo "... error during process, check in ~/Documents/enkode/error.log ..."
-exit 1
+    echo "----------------------------------------------------------" >> $workDir/error.log
+    cat $workDir/.tmp$START/error.log >> $workDir/error.log
+    echo "----------------------------------------------------------" >> $workDir/error.log
+    echo "ls -laR $workDir/*" >> $workDir/error.log
+    echo "ls -laR $workDir/*" >> $workDir/error.log
+    rm -rf $workDir/.tmp*
+    find . -not -path '*/\.*' -maxdepth 1 -type f -size 0 -delete
+    echo "... error during process, check in ~/Documents/enkode/error.log ..." > /dev/tty
+    exit 1
 else
-END=`perl -MTime::HiRes -e 'print Time::HiRes::time(),"\n"'`
-DIFF=`echo $END - $START | bc`
-echo "... done in ${DIFF} seconds." >> $workDir/$name/.info
-if [ $out == 0 ]
-then printf "%-20s %-20s %-20s %-20s %-20s\n" `cat $workDir/.tmp$START/res`
-mv $workDir/$name/.info $workDir/$name/info
-rm -rf $workDir/.tmp*
-elif [ $out == 4 ]
-then cat $workDir/.tmp$START/spec
-echo `awk '{print $1}' $workDir/.tmp$START/res` > $workDir/.tmp$START/alist
-echo "----------------------------------------------------------" >> $workDir/.tmp$START/alist
-cat $workDir/$name/.info >> $workDir/.tmp$START/alist
-mv $workDir/.tmp$START/alist $workDir/$name/.info
-mv $workDir/$name/.info $workDir/$name/info
-mv $workDir/.tmp$START/res $workDir/$name/raw
-rm -rf $workDir/.tmp*
-elif [ $out == 5 ]
-then 
-printf "%-25s %s\n" NumberOfEvents $noe
-printf "%-25s %-15s < %s\n" --loudness-min-thres $minltt $nextmin
-printf "%-25s %-15s > %s\n" --loudness-max-thres $maxltt $nextmax
-printf "%-25s %-15s < %s > %s\n" --loudness-diff-thres $dltt $nextdiff $prevdiff
-printf "%-25s %s\n" MinDiffLoudness $mindiff
-printf "%-25s %s\n" MaxDiffLoudness $maxdiff
-mv $workDir/$name/.info $workDir/$name/info
-rm -rf $workDir/.tmp*
-else
-cat $workDir/.tmp$START/code
-mv $workDir/.tmp$START/res $workDir/$name/raw
-echo "----------------------------------------------------------" >> $workDir/.tmp$START/alist
-cat $workDir/$name/.info >> $workDir/.tmp$START/alist
-mv $workDir/.tmp$START/alist $workDir/$name/.info
-mv $workDir/$name/.info $workDir/$name/info
-rm -rf $workDir/.tmp*
-fi
+    END=`perl -MTime::HiRes -e 'print Time::HiRes::time(),"\n"'`
+    DIFF=`echo $END - $START | bc`
+    echo "... done in ${DIFF} seconds." >> $workDir/$name/.info
+    if [ $out == 0 ]
+    then
+	 if [ $outdir == 0 ]
+	 then
+	     printf "%-20s %-20s %-20s %-20s %-20s\n" `cat $workDir/.tmp$START/res`
+	 else
+	     mv $workDir/.tmp$START/res $outdir/$name.raw
+	 fi
+	 mv $workDir/$name/.info $workDir/$name/$name.info
+	 rm -rf $workDir/.tmp*
+    elif [ $dat == 1 ] 
+    then
+	if [ $outdir == 0 ]
+	then
+	    cat $workDir/.tmp$START/spec
+	else
+	    mv $workDir/.tmp$START/spec $outdir/$name.spectrum
+	fi
+	mv $workDir/.tmp$START/res $workDir/$name/$name.raw
+	if [ $out == 1 ] || [ $out == 2 ] || [ $out == 3 ]
+	then mv $workDir/.tmp$START/code $workDir/$name/$name.dat
+	     echo "----------------------------------------------------------" >> $workDir/.tmp$START/alist
+	     cat $workDir/$name/.info >> $workDir/.tmp$START/alist
+	     mv $workDir/.tmp$START/alist $workDir/$name/.info
+	fi
+	mv $workDir/$name/.info $workDir/$name/$name.info
+	rm -rf $workDir/.tmp*
+    elif [ $out == 4 ] 
+    then
+	printf "%-25s %s\n" NumberOfEvents $noe
+	printf "%-25s %-15s < %s\n" --loudness-min-thres $minltt $nextmin
+	printf "%-25s %-15s > %s\n" --loudness-max-thres $maxltt $nextmax
+	printf "%-25s %-15s < %s > %s\n" --loudness-diff-thres $dltt $nextdiff $prevdiff
+	printf "%-25s %s\n" MinDiffLoudness $mindiff
+	printf "%-25s %s\n" MaxDiffLoudness $maxdiff
+	mv $workDir/$name/.info $workDir/$name/$name.info
+	rm -rf $workDir/.tmp*
+    else
+	if [ $outdir == 0 ]
+	then
+	    cat $workDir/.tmp$START/code
+	else
+	    mv $workDir/.tmp$START/code $workDir/$name/$name.dat
+	fi
+	mv $workDir/.tmp$START/res $workDir/$name/$name.raw
+	echo "----------------------------------------------------------" >> $workDir/.tmp$START/alist
+	cat $workDir/$name/.info >> $workDir/.tmp$START/alist
+	mv $workDir/.tmp$START/alist $workDir/$name/.info
+	mv $workDir/$name/.info $workDir/$name/$name.info
+	rm -rf $workDir/.tmp*
+    fi
 fi

@@ -1,3 +1,5 @@
+<!-- Creator     : groff version 1.19.2 -->
+<!-- CreationDate: Thu Oct 10 23:39:37 2019 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -6,24 +8,23 @@
 <meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
 <meta name="Content-Style" content="text/css">
 <style type="text/css">
-	   body  { font-family: monospace }	
-       p     { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       pre   { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       table { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       h1    { text-align: center }
+       p     { margin-top: 0; margin-bottom: 0; }
+       pre   { margin-top: 0; margin-bottom: 0; }
+       table { margin-top: 0; margin-bottom: 0; }
+       body  { font-family: monospace }	
+       h1    { text-align: center; }
 </style>
 <title>enkode</title>
 
 </head>
 <body>
 
-<!-- $ groff -Thtml -man enkode.1  > enkode.html -->
-
-
 <h1 align=center>enkode</h1>
-<p align="center">Version 5.0.2 alpha</p>
-<p align="center">23 March 2019</p>
+<!-- $ groff -Thtml -man enkode.1  > enkode.html -->
+<p align="center">Version 6.0.1 alpha</p>
+<p align="center">16 October 2019</p>
 <br>
+
 <a href="#NAME">NAME</a><br>
 <a href="#SYNOPSIS">SYNOPSIS</a><br>
 <a href="#DESCRIPTION">DESCRIPTION</a><br>
@@ -40,7 +41,7 @@
 <h2>NAME</h2>
 
 
-<p style="margin-left:4%; margin-top: 1em"><b>enkode</b>
+<p style="margin-left:11%; margin-top: 1em"><b>enkode</b>
 &minus; generate an analytical data score from a sound
 file.</p>
 
@@ -48,22 +49,22 @@ file.</p>
 <h2>SYNOPSIS</h2>
 
 
-<p style="margin-left:4%; margin-top: 1em"><b>enkode</b>
+<p style="margin-left:11%; margin-top: 1em"><b>enkode</b>
 [OPTION(S)[ <i>value</i>|=<i>value</i>]] sound_file</p>
 
 <a name="DESCRIPTION"></a>
 <h2>DESCRIPTION</h2>
 
 
-<p style="margin-left:4%; margin-top: 1em"><b>enkode</b>
-interprets a sound file in terms of numeric score devoted to
-the analysis or music synthesis. This script has been
-designed more specifically for undetermined pitch percussive
-music. <b><br>
-enkode</b> displays a sequence of events which are defined
-for each line by the duration of the event, the loudness,
-the centroid, the loudness of the low pass filtering and the
-value of the first partial as f0. <br>
+<p style="margin-left:11%; margin-top: 1em">The command
+line <b>enkode</b> interprets a sound file in terms of
+numeric score devoted to the analysis or music synthesis.
+This script has been designed more specifically for
+undetermined pitch percussive music. <br>
+Thus, <b>enkode</b> displays a sequence of events which are
+defined for each line by the duration of the event, the
+value of the first partial as f0, the centroid, the loudness
+and the low pass filtered event loudness. <br>
 The audio formats recognised are listed on the <b>praat</b>
 manual.</p>
 
@@ -71,7 +72,7 @@ manual.</p>
 <h2>OPTIONS</h2>
 
 
-<p style="margin-left:4%; margin-top: 1em">The three
+<p style="margin-left:11%; margin-top: 1em">The three
 following options take as argument a number or a list of
 five <br>
 numbers allowing to set the recursive discrimination as
@@ -79,120 +80,121 @@ coefficient. <br>
 Then the number of classes is function of the coefficient of
 recursivity (coeff) according to a positive number as:</p>
 
-<p style="margin-left:12%;">integer = - 1 + 2^coeff; <br>
+<p style="margin-left:32%;">integer = - 1 + 2^coeff; <br>
 float = 2^(floor coeff).</p>
+<br>
+<p style="margin-left:11%;"><b>&minus;I</b>
+<i>num</i>|<i>list</i>,
+<b>&minus;&minus;as&minus;int</b>=<i>num</i>|<i>list</i></p>
 
-<p style="margin-left:4%;"><b>&minus;I</b>
-<i>num/list</i>,
-<b>&minus;&minus;as&minus;int=</b><i>num/list</i></p>
-
-<p style="margin-left:8%;">Interpret the analysis in term
+<p style="margin-left:22%;">Interpret the analysis in term
 of class number according to the discrimination as
 argument.</p>
-
-<p style="margin-left:4%;"><b>&minus;T</b>
-<i>num/list</i>,
-<b>&minus;&minus;as&minus;tc=</b><i>num/list</i></p>
-
-<p style="margin-left:8%;">Convert the previous result to
-thrifty code.</p>
-
-<p style="margin-left:4%;"><b>&minus;G</b>
-<i>num/list</i>,
-<b>&minus;&minus;as&minus;gc=</b><i>num/list</i></p>
-
-<p style="margin-left:8%;">Convert the previous result to
-gray code.</p>
-
-<p style="margin-left:4%;">The options with + prepended
-allow to save the data files in <br>
-~/Documents/enkode/&lt;sampleName&gt;/:</p>
-
-<p style="margin-left:8%;"><b>+profile <br>
-+textgrid <br>
-&minus;textgrid=</b><i>path</i></p>
-
-<p style="margin-left:12%;">Allow to use your own textgrid.
 <br>
-The segmentation has to be on the first tier of the textgrid
-and named as ordered integers from 1 until the total number
-of events.</p>
+<p style="margin-left:11%;"><b>&minus;G</b>
+<i>num</i>|<i>list</i>,
+<b>&minus;&minus;as&minus;gc</b>=<i>num</i>|<i>list</i></p>
 
-<p style="margin-left:8%;"><b>+spectrum <br>
-&minus;spectrum=</b><i>freq/bin</i></p>
+<p style="margin-left:22%;">Convert the previous result to
+gray code.</p>
+<br>
+<p style="margin-left:11%;"><b>&minus;T</b>
+<i>num</i>|<i>list</i>,
+<b>&minus;&minus;as&minus;tc</b>=<i>num</i>|<i>list</i></p>
 
-<p style="margin-left:12%;">Allow to get the spectrum
-analysis on the stdout. <br>
-Each line represents the spectrum dataset as re(Pa/Hz)
-usualy on 116 bins as the bin value and from 0 to 5000 Hz as
-the freq value (values by default with the option +spectrum)
-for each event defined by the textgrid.</p>
+<p style="margin-left:22%;">Convert the previous result to
+thrifty code.</p>
+<br>
+<p style="margin-left:11%;">Setting parameters: <b><br><br>
 
-<p style="margin-left:8%;"><b>&minus;p</b>,
-<b>&minus;&minus;par</b></p>
+&minus;&minus;loudness&minus;diff&minus;thres</b>=<i>number</i></p>
 
-<p style="margin-left:12%;">Allow to display some
-preliminary values for the segmentation in order to adjust
-some parameters if needed. <br>
-Note that the files +textgrid and +profile are automatically
-saved in ~/Documents/enkode/&lt;sampleName&gt;/.</p>
-
-
-<p style="margin-left:4%;"><b>&minus;&minus;loudness&minus;diff&minus;thres=</b><i>number</i></p>
-
-<p style="margin-left:8%;">Set the value of loudness in
+<p style="margin-left:22%;">Set the value of loudness in
 sone units between two potential events to validate
 discrimination. <br>
 The default value is the mean value of the variations
 peak/valley and valley/peak.</p>
 
+<br>
+<p style="margin-left:11%;"><b>&minus;&minus;loudness&minus;min&minus;thres</b>=<i>number</i></p>
 
-<p style="margin-left:4%;"><b>&minus;&minus;loudness&minus;min&minus;thres</b>=<i>number</i></p>
-
-<p style="margin-left:8%;">Set the minimal value of
+<p style="margin-left:22%;">Set the minimal value of
 loudness applied to peaks in sone units to validate a
 potential event. <br>
 The default value is the minimum value of a peak after the
 &minus;&minus;loudness&minus;diff&minus;thres filtering.</p>
 
+<br>
+<p style="margin-left:11%;"><b>&minus;&minus;loudness&minus;max&minus;thres</b>=<i>number</i></p>
 
-<p style="margin-left:4%;"><b>&minus;&minus;loudness&minus;max&minus;thres</b>=<i>number</i></p>
-
-<p style="margin-left:8%;">Set the maximal value of
+<p style="margin-left:22%;">Set the maximal value of
 loudness applied to valleys in sone units to validate a
 potential event. <br>
 The default value is the maximum value of a valley after the
 &minus;&minus;loudness&minus;min&minus;thres filtering.</p>
-
-<p style="margin-left:4%;">Note that the default value of
+<br>
+<p style="margin-left:11%;">Note that the default value of
 the following options is inside curly <br>
-bracket. <b><br>
+bracket. <b><br><br>
 &minus;&minus;cutoff&minus;frequency</b>=<i>number</i>
 {100}</p>
 
-<p style="margin-left:8%;">Set the cut off frequency of
+<p style="margin-left:22%;">Set the cut off frequency of
 the low pass filter for bass discrimination.</p>
 
-
-<p style="margin-left:4%;"><b>&minus;&minus;smooth&minus;frequency</b>=<i>number</i>
+<br>
+<p style="margin-left:11%;"><b>&minus;&minus;smooth&minus;frequency</b>=<i>number</i>
 {500}</p>
 
-<p style="margin-left:8%;">Set the bandwidth frequency for
+<p style="margin-left:22%;">Set the bandwidth frequency for
 cepstral smoothing.</p>
+<br>
+<p style="margin-left:11%;">Additional options: <b><br><br>
+&minus;o</b> <i>path</i>|<i>true</i>,
+<b>&minus;&minus;outdir</b>=<i>path</i>|<i>true</i></p>
+
+<p style="margin-left:22%;">Write output in OUTDIR. If the
+argument is set to TRUE, then OUTDIR =
+'~/Documents/enkode/&lt;sampleName&gt;'.</p>
+<br>
+<p style="margin-left:11%;"><b>&minus;p</b>,
+<b>&minus;&minus;par</b></p>
+
+<p style="margin-left:22%;">Allow to display some
+preliminary values for the segmentation in order to adjust
+some parameters if needed.</p>
+
+<br>
+<p style="margin-left:11%;"><b>&minus;&minus;spectrum</b></p>
+
+<p style="margin-left:22%;">Allow to get the spectrum
+analysis on the stdout. <br>
+Each line represents the spectrum dataset as re(Pa/Hz) on
+116 bins from 0 to 5000 Hz for each event defined by the
+textgrid.</p>
+
+<br>
+<p style="margin-left:11%;"><b>&minus;&minus;textgrid</b>=<i>path</i></p>
+
+<p style="margin-left:22%;">Allow to use your own textgrid.
+<br>
+The segmentation has to be on the first tier of the textgrid
+and named as ordered integers from 1 until the total number
+of events.</p>
 
 <a name="DEPENDENCIES"></a>
 <h2>DEPENDENCIES</h2>
 
 
-<p style="margin-left:4%; margin-top: 1em"><b>praat</b> -
+<p style="margin-left:11%; margin-top: 1em"><b>praat</b> -
 <a href="http://www.fon.hum.uva.nl/praat/">http://www.fon.hum.uva.nl/praat/</a> <b><br>
-sbcl</b>&nbsp; - <a href="http://www.sbcl.org/">http://www.sbcl.org/</a></p>
+sbcl</b> &nbsp;- <a href="http://www.sbcl.org/">http://www.sbcl.org/</a></p>
 
 <a name="BUGS"></a>
 <h2>BUGS</h2>
 
 
-<p style="margin-left:4%; margin-top: 1em">In case of
+<p style="margin-left:11%; margin-top: 1em">In case of
 failure an error.log file is generated. <br>
 Please report any issue at the author.</p>
 
@@ -200,18 +202,18 @@ Please report any issue at the author.</p>
 <h2>AUTHOR</h2>
 
 
-<p style="margin-left:4%; margin-top: 1em">Yann Ics <br>
-<a href='mailto:by.cmsc@gmail.com'>by.cmsc@gmail.com</a></p>
+<p style="margin-left:11%; margin-top: 1em">Yann Ics <br>
+<a href="mailto:by.cmsc@gmail.com">by.cmsc@gmail.com</a></p>
 
 <a name="SEE ALSO"></a>
 <h2>SEE ALSO</h2>
 
 
-<p style="margin-left:4%; margin-top: 1em">It exists a
+<p style="margin-left:11%; margin-top: 1em">It exists a
 full documentation in a form of LaTeX book to describe the
 executable <b>enkode</b> with its parameters and its
 developments on: <br>
-<a href="https://www.overleaf.com/read/sjhfhthgkgdj">https://www.overleaf.com/read/sjhfhthgkgdj</a></p>
+ <a href="https://www.overleaf.com/read/sjhfhthgkgdj">https://www.overleaf.com/read/sjhfhthgkgdj</a></p>
 <hr>
 </body>
 </html>

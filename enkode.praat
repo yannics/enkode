@@ -7,8 +7,7 @@ boolean enkode_analysis
     positive fcut 100
     positive foss 500
 boolean spectrum_analysis 1
-	positive range 5000
-	positive bins 116
+comment The spectrum analysis is done on 116 bins from 0 to 5000 Hz as re(Pa/Hz).
 endform
 # ---------------------------------
 procedure get_first_partial
@@ -33,91 +32,102 @@ endproc
 # ---------------------------------
 procedure mk_spectrum
 	i = 1
-        val=0
+    val=0
 	step=1
 	div=1
-	bw='range'/'bins'
-        nbs = Get number of bins
+    nbs = Get number of bins
 	repeat
 		val1 = Get real value in bin: 'i'
 		fi = Get frequency from bin number: 'i'
 		i = 'i' + 1
-                fact='bw' * 'step'
-	        if 'fi' > 'fact'
-		   
-			res=('val1' + 'val')/'div' 
-			fileappend 'defaultDirectory$'/spectrum 'res' 
-			val = 'val1'
-  			div=1
-			step = 'step' + 1
-                else
-                	val ='val1' + 'val'
-			div='div'+1
-                endif
-	until 'step' = 'bins'+1
+        fact=(5000/116) * 'step'
+	        if 'fi' > 'fact'   
+				res=('val1' + 'val')/'div' 
+				fileappend 'defaultDirectory$'/spectrum.dat 'res' " " 
+				val = 'val1'
+  				div=1
+				step = 'step' + 1
+            else
+               	val ='val1' + 'val'
+				div='div'+1
+            endif
+	until 'step' = 116+1
+endproc
+# ---------------------------------
+procedure mk_loudness .sound$
+	select Sound '.sound$'
+	To Cochleagram: 0.01, 0.1, 0.03, 0.03
+	res = 0
+	tps = 0
+	i = 1
+		while 'tps' < 'duration'
+			select Cochleagram '.sound$'
+			To Excitation (slice): 'tps'
+			loudness = Get loudness
+			array [i] = 'loudness'
+			tps = 'tps' + 0.01
+			i = 'i' + 1
+		endwhile
+	sumnum = 0
+	sumden = 0
+	rev = 'i' 
+		for a from 1 to 'i'-1
+			sumnum = 'sumnum' + (array['a'] * ('rev'-'a'))
+			sumden = 'sumden' + 'a'
+			select Excitation '.sound$'
+			Remove
+		endfor
+	res = sumnum/sumden
+	select Cochleagram '.sound$'
+	Remove
+	select Sound '.sound$'
+	Remove
 endproc
 # ---------------------------------
 Read from file... 'soundfile$'
 current_sound$ = selected$ ("Sound")
 Read from file... 'textgrid$'
 current_textgrid$ = selected$ ("TextGrid")
-filedelete 'defaultDirectory$'/enkode
+filedelete 'defaultDirectory$'/spectrum.dat
+filedelete 'defaultDirectory$'/enkode.dat
 select TextGrid 'current_textgrid$'
 n = Count intervals where: 1, "is not equal to", ""
-    	for nn from 1 to n
-	select Sound 'current_sound$'
-	plus TextGrid 'current_textgrid$'
-	Extract intervals where: 1, "no", "is equal to", "'nn'"
+	for nn from 1 to n
+		select Sound 'current_sound$'
+		plus TextGrid 'current_textgrid$'
+		Extract intervals where: 1, "no", "is equal to", "'nn'"
 		duration = Get total duration
-        	do ("To Spectrum...", "yes")
-        	centroid = Get centre of gravity... 2
-		if (centroid = undefined)
-			centroid = 'fcut'/2
-		endif
+        do ("To Spectrum...", "yes")
+        centroid = Get centre of gravity... 2
+			if (centroid = undefined)
+				centroid = 'fcut'/2 # this is completely arbitrary
+			endif
 		Cepstral smoothing: 'foss'
 # ---------------------------------
-		if (spectrum_analysis = 1)
-		call mk_spectrum
-		fileappend 'defaultDirectory$'/spectrum 'newline$'
-		endif
+			if (spectrum_analysis = 1)
+				call mk_spectrum
+				fileappend 'defaultDirectory$'/spectrum.dat 'newline$'
+			endif
 # ---------------------------------
-		if (enkode_analysis = 1)
-		call get_first_partial
-		
-		if (f0 = 0)
-			f0 = 'fcut'/2
-		endif
-		select Spectrum 'current_sound$'_'nn'_1
-		Remove
-      	select Sound 'current_sound$'_'nn'_1
-        nocheck To Cochleagram: 0.01, 0.1, 0.03, 0.03
-	nocheck To Excitation (slice): 0
-	loudness = nocheck Get loudness
-        if (loudness = undefined)
-                loudness = 1.6
-		bass = 1.6
-	select Sound 'current_sound$'_'nn'_1
-	Remove
-        else
-	select Cochleagram 'current_sound$'_'nn'_1
-	plus Excitation 'current_sound$'_'nn'_1
-	Remove
-	
-	select Sound 'current_sound$'_'nn'_1
-      	do ("Filter (stop Hann band)...", 'fcut', 0, 50)
-      	select Sound 'current_sound$'_'nn'_1_band
-	To Cochleagram: 0.01, 0.1, 0.03, 0.03
-	To Excitation (slice): 0
-	bass = Get loudness
-      	appendFileLine("enkode", 'duration', " ", 'loudness', " ", 'centroid', " ", 'bass', " ", 'f0')
-	endif
-	select Spectrum 'current_sound$'_'nn'_1
-      	plus Sound 'current_sound$'_'nn'_1
-      	plus Sound 'current_sound$'_'nn'_1_band
-        plus Cochleagram 'current_sound$'_'nn'_1_band
-        plus Excitation 'current_sound$'_'nn'_1_band
-      	Remove
-	endif
+			if (enkode_analysis = 1)
+				call get_first_partial
+					if (f0 = 0)
+						f0 = 'fcut'/2 # this is completely arbitrary
+					endif
+				select Spectrum 'current_sound$'_'nn'_1
+				Remove
+				select Spectrum 'current_sound$'_'nn'_1
+				Remove
+				select Sound 'current_sound$'_'nn'_1
+				Rename: "event"
+				Filter (stop Hann band): 100, 0, 50
+				Rename: "bass"
+				call mk_loudness bass
+				loudbass = res		
+				call mk_loudness event
+				loudness = res		
+		      	appendFileLine("enkode.dat", 'duration', " ", 'f0', " ", 'centroid', " ", 'loudness', " ", 'loudbass')
+    		endif
 	endfor
 select all
 Remove

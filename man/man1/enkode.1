@@ -1,6 +1,6 @@
 .\" Manpage for enkode.
 .\" Contact by.cmsc@gmail.com to correct errors or typos.
-.TH enkode 1 "23 March 2019" "5.0.2 alpha" "Executable bash script"
+.TH enkode 1 "16 October 2019" "6.0.1 alpha" "Executable bash script"
 .SH NAME
 .B enkode
 \- generate an analytical data score from a sound file.
@@ -8,16 +8,18 @@
 .B enkode
 [OPTION(S)[ \fIvalue\fR|=\fIvalue\fR]] sound_file
 .SH DESCRIPTION
+The command line
 .B enkode
 interprets a sound file in terms of numeric score devoted to the analysis or music synthesis. This script has been designed more specifically for undetermined pitch percussive music.
 .RS
 .RE
-.B enkode 
-displays a sequence of events which are defined for each line by the duration of the event, the loudness, the centroid, the loudness of the low pass filtering and the value of the first partial as f0.
+Thus,
+.B enkode
+displays a sequence of events which are defined for each line by the duration of the event, the value of the first partial as f0, the centroid, the loudness and the low pass filtered event loudness.
 .RS
 .RE
-The audio formats recognised are listed on the 
-.B praat 
+The audio formats recognised are listed on the
+.B praat
 manual.
 .SH OPTIONS
 .TP
@@ -33,72 +35,37 @@ float = 2^(floor coeff).
 .RE
 .RE
 .TP
-.BR \-I " " \fInum/list\fR ", " \-\-as\-int=\fInum/list\fR " "
+.BR \-I " " \fInum\fR|\fIlist\fR ", " \-\-as\-int =\fInum\fR|\fIlist\fR " "
 Interpret the analysis in term of class number according to the discrimination as argument.
 .RE
 .TP
-.BR \-T " " \fInum/list\fR ", " \-\-as\-tc=\fInum/list\fR " "
-Convert the previous result to thrifty code.
-.RE
-.TP
-.BR \-G " " \fInum/list\fR ", " \-\-as\-gc=\fInum/list\fR " "
+.BR \-G " " \fInum\fR|\fIlist\fR ", " \-\-as\-gc =\fInum\fR|\fIlist\fR " "
 Convert the previous result to gray code.
 .RE
 .TP
-The options with + prepended allow to save the data files in ~/Documents/enkode/<sampleName>/:
-.RS
-.BR +profile
-.RE
-.RS
-.BR +textgrid
-.RE
-.RS
-.BR \-textgrid=\fIpath\fR " "
-.RS
-Allow to use your own textgrid.
-.RE
-.RS
-The segmentation has to be on the first tier of the textgrid and named as ordered integers from 1 until the total number of events.
-.RE
-.RE
-.RS
-.BR +spectrum
-.RE
-.RS
-.BR \-spectrum=\fIfreq/bin\fR " " 
-.RS
-Allow to get the spectrum analysis on the stdout.
-.RE
-.RS
-Each line represents the spectrum dataset as re(Pa/Hz) usualy on 116 bins as the bin value and from 0 to 5000 Hz as the freq value (values by default with the option +spectrum) for each event defined by the textgrid.
-.RE
-.RE
-.RS
-.BR \-p ", " \-\-par
-.RS
-Allow to display some preliminary values for the segmentation in order to adjust some parameters if needed. 
-.RE
-.RS
-Note that the files +textgrid and +profile are automatically saved in ~/Documents/enkode/<sampleName>/.
-.RE
+.BR \-T " " \fInum\fR|\fIlist\fR ", " \-\-as\-tc =\fInu\fR|\fIlist\fR " "
+Convert the previous result to thrifty code.
 .RE
 .TP
-.BR \-\-loudness\-diff\-thres=\fInumber\fR " " 
-Set the value of loudness in sone units between two potential events to validate discrimination. 
+Setting parameters:
+.RE
+.TP
+.BR \-\-loudness\-diff\-thres =\fInumber\fR " "
+Set the value of loudness in sone units between two potential events to validate discrimination.
 .RE
 .RS
 The default value is the mean value of the variations peak/valley and valley/peak.
 .RE
 .TP
-.BR \-\-loudness\-min\-thres =\fInumber\fR " " 
-Set the minimal value of loudness applied to peaks in sone units to validate a potential event. 
+.BR \-\-loudness\-min\-thres =\fInumber\fR " "
+Set the minimal value of loudness applied to peaks in sone units to validate a potential event.
 .RE
 .RS
 The default value is the minimum value of a peak after the \-\-loudness\-diff\-thres filtering.
 .RE
 .TP
-.BR \-\-loudness\-max\-thres =\fInumber\fR " " 
-Set the maximal value of loudness applied to valleys in sone units to validate a potential event. 
+.BR \-\-loudness\-max\-thres =\fInumber\fR " "
+Set the maximal value of loudness applied to valleys in sone units to validate a potential event.
 .RE
 .RS
 The default value is the maximum value of a valley after the \-\-loudness\-min\-thres filtering.
@@ -111,8 +78,33 @@ Set the cut off frequency of the low pass filter for bass discrimination.
 .TP
 .BR \-\-smooth\-frequency =\fInumber\fR " " {500}
 Set the bandwidth frequency for cepstral smoothing.
+.RE
+.TP
+Additional options:
+.RE
+.TP
+.BR \-o " " \fIpath\fR|\fItrue\fR ", " \-\-outdir =\fIpath\fR|\fItrue\fR " "
+Write output in OUTDIR. If the argument is set to TRUE, then OUTDIR = '~/Documents/enkode/<sampleName>/'.
+.RE
+.TP
+.BR \-p ", " \-\-par
+Allow to display some preliminary values for the segmentation in order to adjust some parameters if needed.
+.RE
+.TP
+.BR \-\-spectrum
+Allow to get the spectrum analysis on the stdout.
+.RE
+.RS
+Each line represents the spectrum dataset as re(Pa/Hz) on 116 bins from 0 to 5000 Hz for each event defined by the textgrid.
+.RE
+.TP
+.BR \-\-textgrid =\fIpath\fR " "
+Allow to use your own textgrid.
+.RE
+.RS
+The segmentation has to be on the first tier of the textgrid and named as ordered integers from 1 until the total number of events.
 .SH DEPENDENCIES
-.BR praat " - " 
+.BR praat " - "
 http://www.fon.hum.uva.nl/praat/
 .RE
 .BR sbcl "  - "
