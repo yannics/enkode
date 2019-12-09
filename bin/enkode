@@ -1,6 +1,6 @@
 #!/bin/bash
 ######################################################
-# enkode - version 6.0.1 alpha
+# enkode - version 6.0.2 alpha
 # author: Yann Ics (by.cmsc@gmail.com)
 # requires: Praat, SBCL, zip, bc
 ######################################################
@@ -20,7 +20,7 @@ usage(){
 }
 
 version(){
-    echo "Version 6.0.1 alpha"
+    echo "Version 6.0.2 alpha"
 }
 
 get_abs_filename() {
@@ -136,13 +136,13 @@ do
     delim=""
     case "$arg" in
 	--spectrum) args="${args}-s ";;
-	--textgrid*) a=`getn $arg`;args="${args}-t ${a} ";;	
+	--textgrid*) a=`getn $arg`;args="${args}-t ${a} ";;
 	--loudness-diff-thres*) a=`getn $arg`;args="${args}-a ${a} ";;
 	--loudness-min-thres*) a=`getn $arg`;args="${args}-b ${a} ";;
 	--loudness-max-thres*) a=`getn $arg`;args="${args}-c ${a} ";;
 	--cutoff-frequency*) a=`getn $arg`;args="${args}-d ${a} ";;
 	--smooth-frequency*) a=`getn $arg`;args="${args}-e ${a} ";;
-	--outdir*) a=`getn $arg`;args="${args}-o ${a} ";;	
+	--outdir*) a=`getn $arg`;args="${args}-o ${a} ";;
 	--as-int*) a=`getn $arg`;args="${args}-I ${a} ";;
 	--as-tc*) a=`getn $arg`;args="${args}-T ${a} ";;
 	--as-gc*) a=`getn $arg`;args="${args}-G ${a} ";;
@@ -193,7 +193,7 @@ done
 ##
 ##
 ##
-rm -rf $workDir/.tmp* 2> /dev/null
+#rm -rf $workDir/.tmp* 2> /dev/null
 START=`perl -MTime::HiRes -e 'print Time::HiRes::time(),"\n"'`
 
 NEW=0
@@ -201,7 +201,7 @@ NEW=0
 if [ -d "$workDir/$name" ]; then
     cd $workDir/$name
     rm -R -- */ 2> /dev/null
-    
+
     if [ -f $workDir/$name/$name.info ]
     then
 	zipname=`grep "START ---" $workDir/$name/$name.info | awk '{print $3}'`
@@ -213,7 +213,7 @@ if [ -d "$workDir/$name" ]; then
     else
 	NEW=1
     fi
-    
+
     if [ -f $workDir/error.log ]
     then
         mv $workDir/error.log $workDir/$name/$zipname/
@@ -884,6 +884,7 @@ fi
 # enkode has failed. More information about this failure is listed in error.log file.
 if [[ -s $workDir/.tmp$START/error.log ]]
 then
+  #ERRORLOG##############################################
     echo "... error during process, check error.log ..." >> $workDir/$name/.info
     cat $workDir/$name/.info > $workDir/error.log
     echo "----------------------------------------------------------" >> $workDir/error.log
@@ -900,59 +901,69 @@ then
     find . -not -path '*/\.*' -maxdepth 1 -type f -size 0 -delete
     echo "... error during process, check in ~/Documents/enkode/error.log ..." > /dev/tty
     exit 1
+  #######################################################
 else
     END=`perl -MTime::HiRes -e 'print Time::HiRes::time(),"\n"'`
     DIFF=`echo $END - $START | bc`
     echo "... done in ${DIFF} seconds." >> $workDir/$name/.info
-    if [ $out == 0 ]
+
+  #######################################################
+    if [ $out == 0 ] && [ $dat == 0 ]
     then
-	 if [ $outdir == 0 ]
-	 then
-	     printf "%-20s %-20s %-20s %-20s %-20s\n" `cat $workDir/.tmp$START/res`
-	 else
-	     mv $workDir/.tmp$START/res $outdir/$name.raw
-	 fi
-	 mv $workDir/$name/.info $workDir/$name/$name.info
-	 rm -rf $workDir/.tmp*
-    elif [ $dat == 1 ] 
+	     if [ $outdir == 0 ]
+	     then
+	        printf "%-20s %-20s %-20s %-20s %-20s\n" `cat $workDir/.tmp$START/res`
+	     else
+	        mv $workDir/.tmp$START/res $outdir/$name.raw
+	     fi
+	     mv $workDir/$name/.info $workDir/$name/$name.info
+	     rm -rf $workDir/.tmp*
+
+  #######################################################
+    elif [ $out == 0 ] && [ $dat == 1 ]
     then
-	if [ $outdir == 0 ]
-	then
-	    cat $workDir/.tmp$START/spec
-	else
-	    mv $workDir/.tmp$START/spec $outdir/$name.spectrum
-	fi
-	mv $workDir/.tmp$START/res $workDir/$name/$name.raw
-	if [ $out == 1 ] || [ $out == 2 ] || [ $out == 3 ]
-	then mv $workDir/.tmp$START/code $workDir/$name/$name.dat
+	     if [ $outdir == 0 ]
+	     then
+	        cat $workDir/.tmp$START/spec
+	     else
+	        mv $workDir/.tmp$START/spec $outdir/$name.spectrum
+	     fi
+	     mv $workDir/.tmp$START/res $workDir/$name/$name.raw
+
+      if [ $out == 1 ] || [ $out == 2 ] || [ $out == 3 ]
+	    then mv $workDir/.tmp$START/code $workDir/$name/$name.dat
+	       echo "----------------------------------------------------------" >> $workDir/.tmp$START/alist
+	       cat $workDir/$name/.info >> $workDir/.tmp$START/alist
+	       mv $workDir/.tmp$START/alist $workDir/$name/.info
+	    fi
+	    mv $workDir/$name/.info $workDir/$name/$name.info
+	    rm -rf $workDir/.tmp*
+
+  #######################################################
+    elif [ $out == 4 ]
+    then
+	     printf "%-25s %s\n" NumberOfEvents $noe
+	     printf "%-25s %-15s < %s\n" --loudness-min-thres $minltt $nextmin
+	     printf "%-25s %-15s > %s\n" --loudness-max-thres $maxltt $nextmax
+	     printf "%-25s %-15s < %s > %s\n" --loudness-diff-thres $dltt $nextdiff $prevdiff
+ 	     printf "%-25s %s\n" MinDiffLoudness $mindiff
+	     printf "%-25s %s\n" MaxDiffLoudness $maxdiff
+	     mv $workDir/$name/.info $workDir/$name/$name.info
+	     rm -rf $workDir/.tmp*
+
+  #######################################################
+    else
+	     if [ $outdir == 0 ]
+	     then
+	        cat $workDir/.tmp$START/code
+	     else
+	        mv $workDir/.tmp$START/code $workDir/$name/$name.dat
+	     fi
+	     mv $workDir/.tmp$START/res $workDir/$name/$name.raw
 	     echo "----------------------------------------------------------" >> $workDir/.tmp$START/alist
 	     cat $workDir/$name/.info >> $workDir/.tmp$START/alist
 	     mv $workDir/.tmp$START/alist $workDir/$name/.info
-	fi
-	mv $workDir/$name/.info $workDir/$name/$name.info
-	rm -rf $workDir/.tmp*
-    elif [ $out == 4 ] 
-    then
-	printf "%-25s %s\n" NumberOfEvents $noe
-	printf "%-25s %-15s < %s\n" --loudness-min-thres $minltt $nextmin
-	printf "%-25s %-15s > %s\n" --loudness-max-thres $maxltt $nextmax
-	printf "%-25s %-15s < %s > %s\n" --loudness-diff-thres $dltt $nextdiff $prevdiff
-	printf "%-25s %s\n" MinDiffLoudness $mindiff
-	printf "%-25s %s\n" MaxDiffLoudness $maxdiff
-	mv $workDir/$name/.info $workDir/$name/$name.info
-	rm -rf $workDir/.tmp*
-    else
-	if [ $outdir == 0 ]
-	then
-	    cat $workDir/.tmp$START/code
-	else
-	    mv $workDir/.tmp$START/code $workDir/$name/$name.dat
-	fi
-	mv $workDir/.tmp$START/res $workDir/$name/$name.raw
-	echo "----------------------------------------------------------" >> $workDir/.tmp$START/alist
-	cat $workDir/$name/.info >> $workDir/.tmp$START/alist
-	mv $workDir/.tmp$START/alist $workDir/$name/.info
-	mv $workDir/$name/.info $workDir/$name/$name.info
-	rm -rf $workDir/.tmp*
+	     mv $workDir/$name/.info $workDir/$name/$name.info
+	     rm -rf $workDir/.tmp*
     fi
 fi
