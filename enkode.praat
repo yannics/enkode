@@ -1,4 +1,4 @@
-form Analysis
+form enkode analysis
     sentence soundfile 
     sentence textgrid 
 comment The segmentation has to be on the first tier of the textgrid 
