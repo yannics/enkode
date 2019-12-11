@@ -193,7 +193,7 @@ done
 ##
 ##
 ##
-#rm -rf $workDir/.tmp* 2> /dev/null
+rm -rf $workDir/.tmp* 2> /dev/null
 START=`perl -MTime::HiRes -e 'print Time::HiRes::time(),"\n"'`
 
 NEW=0
