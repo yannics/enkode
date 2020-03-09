@@ -9,6 +9,8 @@ boolean enkode_analysis
 boolean spectrum_analysis 1
 comment The spectrum analysis is done on 116 bins from 0 to 5000 Hz as re(Pa/Hz).
 endform
+filedelete 'defaultDirectory$'/spectrum.dat
+filedelete 'defaultDirectory$'/enkode.dat
 # ---------------------------------
 procedure get_first_partial
 	i = 1
@@ -43,7 +45,7 @@ procedure mk_spectrum
         fact=(5000/116) * 'step'
 	        if 'fi' > 'fact'   
 				res=('val1' + 'val')/'div' 
-				fileappend 'defaultDirectory$'/spectrum.dat 'res' " " 
+				fileappend 'defaultDirectory$'/spectrum.dat 'res' 
 				val = 'val1'
   				div=1
 				step = 'step' + 1
@@ -86,12 +88,18 @@ endproc
 # ---------------------------------
 Read from file... 'soundfile$'
 current_sound$ = selected$ ("Sound")
+if (textgrid$ == "no")
+To TextGrid: "a", "b"
+Set interval text: 1, 1, "1"
+current_textgrid$ = selected$ ("TextGrid")
+select TextGrid 'current_textgrid$'
+n = Get number of intervals: 1
+else
 Read from file... 'textgrid$'
 current_textgrid$ = selected$ ("TextGrid")
-filedelete 'defaultDirectory$'/spectrum.dat
-filedelete 'defaultDirectory$'/enkode.dat
 select TextGrid 'current_textgrid$'
 n = Count intervals where: 1, "is not equal to", ""
+endif
 	for nn from 1 to n
 		select Sound 'current_sound$'
 		plus TextGrid 'current_textgrid$'

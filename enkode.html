@@ -1,5 +1,5 @@
 <!-- Creator     : groff version 1.19.2 -->
-<!-- CreationDate: Thu Oct 10 23:39:37 2019 -->
+<!-- CreationDate: Sat Mar  7 18:12:38 2020 -->
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
 "http://www.w3.org/TR/html4/loose.dtd">
 <html>
@@ -21,8 +21,8 @@
 
 <h1 align=center>enkode</h1>
 <!-- $ groff -Thtml -man enkode.1  > enkode.html -->
-<p align="center">Version 6.0.2 alpha</p>
-<p align="center">9 December 2019</p>
+<p align="center">Version 6.0.3 alpha</p>
+<p align="center">9 March 2020</p>
 <br>
 
 <a href="#NAME">NAME</a><br>
@@ -74,8 +74,7 @@ manual.</p>
 
 <p style="margin-left:11%; margin-top: 1em">The three
 following options take as argument a number or a list of
-five <br>
-numbers allowing to set the recursive discrimination as
+five numbers allowing to set the recursive discrimination as
 coefficient. <br>
 Then the number of classes is function of the coefficient of
 recursivity (coeff) according to a positive number as:</p>
@@ -133,10 +132,26 @@ potential event. <br>
 The default value is the maximum value of a valley after the
 &minus;&minus;loudness&minus;min&minus;thres filtering.</p>
 <br>
+
 <p style="margin-left:11%;">Note that the default value of
-the following options is inside curly <br>
-bracket. <b><br><br>
-&minus;&minus;cutoff&minus;frequency</b>=<i>number</i>
+the following options is inside curly bracket. <b><br><br>
+
+&minus;&minus;min&minus;duration</b>=<i>number</i>
+{0.05}</p>
+
+<p style="margin-left:22%;">Set the minimal value of an
+event duration to be retained as an event. Any event below
+this duration will be merged with its successor.</p><br>
+
+<p style="margin-left:11%;"><b>&minus;&minus;max&minus;duration</b>=<i>number</i>
+{10}</p>
+
+<p style="margin-left:22%;">Set the maximal value of an
+event duration to be retained as an event. If an event
+exceed this value, the tail of this event will be
+truncated.</p><br>
+
+<p style="margin-left:11%;"><b>&minus;&minus;cutoff&minus;frequency</b>=<i>number</i>
 {100}</p>
 
 <p style="margin-left:22%;">Set the cut off frequency of
@@ -149,31 +164,7 @@ the low pass filter for bass discrimination.</p>
 <p style="margin-left:22%;">Set the bandwidth frequency for
 cepstral smoothing.</p>
 <br>
-<p style="margin-left:11%;">Additional options: <b><br><br>
-&minus;o</b> <i>path</i>|<i>true</i>,
-<b>&minus;&minus;outdir</b>=<i>path</i>|<i>true</i></p>
-
-<p style="margin-left:22%;">Write output in OUTDIR. If the
-argument is set to TRUE, then OUTDIR =
-'~/Documents/enkode/&lt;sampleName&gt;'.</p>
-<br>
-<p style="margin-left:11%;"><b>&minus;p</b>,
-<b>&minus;&minus;par</b></p>
-
-<p style="margin-left:22%;">Allow to display some
-preliminary values for the segmentation in order to adjust
-some parameters if needed.</p>
-
-<br>
-<p style="margin-left:11%;"><b>&minus;&minus;spectrum</b></p>
-
-<p style="margin-left:22%;">Allow to get the spectrum
-analysis on the stdout. <br>
-Each line represents the spectrum dataset as re(Pa/Hz) on
-116 bins from 0 to 5000 Hz for each event defined by the
-textgrid.</p>
-
-<br>
+<p style="margin-left:11%;">Additional options: <br><br>
 <p style="margin-left:11%;"><b>&minus;&minus;textgrid</b>=<i>path</i></p>
 
 <p style="margin-left:22%;">Allow to use your own textgrid.
@@ -182,13 +173,52 @@ The segmentation has to be on the first tier of the textgrid
 and named as ordered integers from 1 until the total number
 of events.</p>
 
+<br>
+<p style="margin-left:11%;"><b>&minus;o</b> <i>path</i>|<i>true</i>,
+<b>&minus;&minus;outdir</b>=<i>path</i>|<i>true</i></p>
+
+<p style="margin-left:22%;">Write output in OUTDIR. If the
+argument is set to TRUE, then OUTDIR =
+'~/Documents/enkode/&lt;sampleName&gt;'.</p>
+<br>
+
+<p style="margin-left:11%;"><b>&minus;e</b>,
+<b>&minus;&minus;as&minus;event</b></p>
+
+<p style="margin-left:22%;">Return only the analysis for
+one single event defined by the input sound file.</p>
+
+<br>
+<p style="margin-left:11%;"><b>&minus;p</b>,
+<b>&minus;&minus;par</b></p>
+
+<p style="margin-left:22%;">Allow to display some
+preliminary values for the segmentation in order to adjust
+some parameters if needed.</p>
+
+
+<br>
+<p style="margin-left:11%;">OSC networking options: <br>
+The command line <b>sendosc</b> is required. <br><br>
+
+<p style="margin-left:11%;"><b>&minus;&minus;sendto</b>=<i>ip:port</i>|<i>port</i></p>
+
+<p style="margin-left:22%;">Assign ip:port for enkode analysis, localhost as 127.0.0.1 by default.</p><br>
+
+
+<p style="margin-left:11%;"><b>&minus;&minus;spectrum</b>=<i>ip:port</i>|<i>port</i></p>
+
+<p style="margin-left:22%;">Assign ip:port for spectrum analysis, localhost as 127.0.0.1 by default.</p><br>
+
 <a name="DEPENDENCIES"></a>
 <h2>DEPENDENCIES</h2>
 
 
 <p style="margin-left:11%; margin-top: 1em"><b>praat</b> -
 <a href="http://www.fon.hum.uva.nl/praat/">http://www.fon.hum.uva.nl/praat/</a> <b><br>
-sbcl</b> &nbsp;- <a href="http://www.sbcl.org/">http://www.sbcl.org/</a></p>
+sbcl</b> &nbsp;- <a href="http://www.sbcl.org/">http://www.sbcl.org/</a><br>
+Optionally <b>sendosc</b></p>
+
 
 <a name="BUGS"></a>
 <h2>BUGS</h2>

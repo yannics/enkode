@@ -1,6 +1,6 @@
 .\" Manpage for enkode.
 .\" Contact by.cmsc@gmail.com to correct errors or typos.
-.TH enkode 1 "9 December 2019" "6.0.2 alpha" "Executable bash script"
+.TH enkode 1 "9 March 2020" "6.0.3 alpha" "Executable bash script"
 .SH NAME
 .B enkode
 \- generate an analytical data score from a sound file.
@@ -43,7 +43,7 @@ Interpret the analysis in term of class number according to the discrimination a
 Convert the previous result to gray code.
 .RE
 .TP
-.BR \-T " " \fInum\fR|\fIlist\fR ", " \-\-as\-tc =\fInu\fR|\fIlist\fR " "
+.BR \-T " " \fInum\fR|\fIlist\fR ", " \-\-as\-tc =\fInum\fR|\fIlist\fR " "
 Convert the previous result to thrifty code.
 .RE
 .TP
@@ -72,6 +72,14 @@ The default value is the maximum value of a valley after the \-\-loudness\-min\-
 .RE
 .TP
 Note that the default value of the following options is inside curly bracket.
+.RE
+.TP
+.BR \-\-min\-duration =\fInumber\fR " " {0.05}
+Set the minimal value of an event duration to be retained as an event. Any event below this duration will be merged with its successor.
+.RE
+.TP
+.BR \-\-max\-duration =\fInumber\fR " " {10}
+Set the maximal value of an event duration to be retained as an event. If an event exceed this value, the tail of this event will be truncated.
 .TP
 .BR \-\-cutoff\-frequency =\fInumber\fR " " {100}
 Set the cut off frequency of the low pass filter for bass discrimination.
@@ -83,32 +91,48 @@ Set the bandwidth frequency for cepstral smoothing.
 Additional options:
 .RE
 .TP
+.BR \-\-textgrid =\fIpath\fR " "
+Allow to use your own textgrid.
+.RE
+.RS
+The segmentation has to be on the first tier of the textgrid and named as ordered integers from 1 until the total number of events.
+.RE
+.TP
 .BR \-o " " \fIpath\fR|\fItrue\fR ", " \-\-outdir =\fIpath\fR|\fItrue\fR " "
 Write output in OUTDIR. If the argument is set to TRUE, then OUTDIR = '~/Documents/enkode/<sampleName>/'.
+.RE
+.TP
+.BR \-e ", " \-\-as\-event
+Return only the analysis for one single event defined by the input sound file.
 .RE
 .TP
 .BR \-p ", " \-\-par
 Allow to display some preliminary values for the segmentation in order to adjust some parameters if needed.
 .RE
 .TP
-.BR \-\-spectrum
-Allow to get the spectrum analysis on the stdout.
-.RE
+OSC networking options:
 .RS
-Each line represents the spectrum dataset as re(Pa/Hz) on 116 bins from 0 to 5000 Hz for each event defined by the textgrid.
+.RE
+The command line
+.B sendosc
+is required.
 .RE
 .TP
-.BR \-\-textgrid =\fIpath\fR " "
-Allow to use your own textgrid.
+.BR \-\-sendto =\fIip:port\fR|\fIport\fR " "
+Assign ip:port for enkode analysis, localhost as 127.0.0.1 by default.
 .RE
-.RS
-The segmentation has to be on the first tier of the textgrid and named as ordered integers from 1 until the total number of events.
+.TP
+.BR \-\-spectrum =\fIip:port\fR|\fIport\fR " "
+Assign ip:port for spectrum analysis, localhost as 127.0.0.1 by default.
 .SH DEPENDENCIES
 .BR praat " - "
 http://www.fon.hum.uva.nl/praat/
 .RE
 .BR sbcl "  - "
 http://www.sbcl.org/
+.RE
+Optionally
+.BR sendosc
 .SH BUGS
 In case of failure an error.log file is generated.
 .RE
