@@ -1078,7 +1078,7 @@ else
 
     #OSC###################################################
     elif [ $osc == 1 ] && [ $event == 1 ]
-    then	
+    then echo "OSC"
 	if [ $rport != 0 ]
 	then
 	    sendosc $rip $rport /enkode s $name i 0 `cat $workDir/.tmp$START/res`
@@ -1094,7 +1094,7 @@ else
 	
     #+++++++++++++++++++++++++++++++++++++++
     elif [ $osc == 1 ] && [ $event == 0 ]
-    then
+    then echo "OSC"
 	if [ $sport == 0 ]
 	then
 	    echo "Events send to $rip:$rport as /enkode $name ~e data"
@@ -1103,8 +1103,8 @@ else
 	then
 	    echo "Events send to $sip:$sport as /spectrum $name ~e data"
 	else
-	    echo "Events send to $rip:$rport as /enkode $name i data"
-	    echo "and to $sip:$sport as /spectrum $name i data"
+	    echo "Events send to $rip:$rport as /enkode $name ~e data"
+	    echo "and to $sip:$sport as /spectrum $name ~e data"
 	fi
 	if [ $out == 1 ] || [ $out == 2 ] || [ $out == 3 ]
 	then
