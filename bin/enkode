@@ -472,7 +472,7 @@ echo ";; read loudness profile file
     (reverse r)))
 
 (defun subgroup (lst)
-  (let ((prev 0) r)
+  (let ((prev (car lst)) r)
     (loop for i from 0 to (- (length lst) 2)
 	 do (push (list (1+ i) (nth i lst) (nth (1+ i) lst) (- (nth (1+ i) lst) prev)) r) (setf prev (nth (1+ i) lst)))
     (if (zerop (cadar (last r)))
