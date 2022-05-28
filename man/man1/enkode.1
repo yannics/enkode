@@ -1,6 +1,6 @@
 .\" Manpage for enkode.
 .\" Contact by.cmsc@gmail.com to correct errors or typos.
-.TH enkode 1 "9 March 2020" "6.0.3 alpha" "Executable bash script"
+.TH enkode 1 "28 May 2022" "7.0 alpha" "Executable bash script"
 .SH NAME
 .B enkode
 \- generate an analytical data score from a sound file.
@@ -47,7 +47,7 @@ Convert the previous result to gray code.
 Convert the previous result to thrifty code.
 .RE
 .TP
-Setting parameters:
+Profile streamline settings:
 .RE
 .TP
 .BR \-\-loudness\-diff\-thres =\fInumber\fR " "
@@ -71,7 +71,15 @@ Set the maximal value of loudness applied to valleys in sone units to validate a
 The default value is the maximum value of a valley after the \-\-loudness\-min\-thres filtering.
 .RE
 .TP
-Note that the default value of the following options is inside curly bracket.
+.BR \-e ", " \-\-as\-event
+Return only the analysis for one single event defined by the input sound file.
+.RE
+.TP
+.BR \-p ", " \-\-par
+Allow to display some preliminary values for the segmentation in order to adjust some of the previous parameters if needed.
+.RE
+.TP
+Analysis settings (note that the default value of the following options is inside curly bracket):
 .RE
 .TP
 .BR \-\-min\-duration =\fInumber\fR " " {0.05}
@@ -86,6 +94,9 @@ Set the cut off frequency of the low pass filter for bass discrimination.
 .TP
 .BR \-\-smooth\-frequency =\fInumber\fR " " {500}
 Set the bandwidth frequency for cepstral smoothing.
+.TP
+.BR \-\-time\-step =\fInumber\fR " " {0.01}
+Set the analysis time step.
 .RE
 .TP
 Additional options:
@@ -98,41 +109,45 @@ Allow to use your own textgrid.
 The segmentation has to be on the first tier of the textgrid and named as ordered integers from 1 until the total number of events.
 .RE
 .TP
-.BR \-o " " \fIpath\fR|\fItrue\fR ", " \-\-outdir =\fIpath\fR|\fItrue\fR " "
-Write output in OUTDIR. If the argument is set to TRUE, then OUTDIR = '~/Documents/enkode/<sampleName>/'.
+.BR \-o ", " \-O " " \fIpath\fR ", " \-\-outdir =\fIpath\fR " "
+Write the output as OUTDIR in the path directory argument. If the argument is set to \-o without argument, then OUTDIR = '~/Documents/enkode/<sampleName>/'.
+.RE
+.P
+Options for interpreting audio file according to the following optional analysis:
 .RE
 .TP
-.BR \-e ", " \-\-as\-event
-Return only the analysis for one single event defined by the input sound file.
+.BR \-s 
+Return the spectrum analysis done on 116 bins from 0 to 5000 Hz as re(Pa/Hz).
 .RE
 .TP
-.BR \-p ", " \-\-par
-Allow to display some preliminary values for the segmentation in order to adjust some parameters if needed.
+.BR \-r
+This is a kind of roughness indicator done from the peaks of the loudness profile of the event in order to detect emergent frequency, which has to be interpreted in context.
 .RE
-.TP
-OSC networking options:
 .RS
+Note that the analysis is done according to the value of the \-\-time\-step multiply by a given factor set with the option:
 .RE
-The command line
-.B sendosc
-is required.
+.RS
+.BR \-\-time\-fact=\fInumber\fR " " 
+{0.1} 
 .RE
-.TP
-.BR \-\-sendto =\fIip:port\fR|\fIport\fR " "
-Assign ip:port for enkode analysis, localhost as 127.0.0.1 by default.
+.RS
+Also, an optional window value for smoothing loudness profile is done by the mean of this window applied on successive values in time according to the time step multiply by the time factor, and can bet set with the option:
 .RE
-.TP
-.BR \-\-spectrum =\fIip:port\fR|\fIport\fR " "
-Assign ip:port for spectrum analysis, localhost as 127.0.0.1 by default.
+.RS
+.BR \-\-smooth\-profile=\fIinteger\fR " " 
+{3} 
+.RE
+.RS
+Return the frequency, the reliability of this frequency, the relative loudness of this frequency, the reliability of this loudness, and the intensity of the event in dB. 
+.RE
+.RS
+The reliability is the standard deviation of the normalised values subtracted to one.
 .SH DEPENDENCIES
 .BR praat " - "
 http://www.fon.hum.uva.nl/praat/
 .RE
 .BR sbcl "  - "
 http://www.sbcl.org/
-.RE
-Optionally
-.BR sendosc
 .SH BUGS
 In case of failure an error.log file is generated.
 .RE
