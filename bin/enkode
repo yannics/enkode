@@ -301,6 +301,8 @@ if [ $NEW = 0 ]; then
 fi
 
 # ---------------------------------------------
+### PRAAT ###              GET LOUDNESS PROFILE
+# ---------------------------------------------
 # script PRAAT
 if [ $Ftextgrid == 0 ] && [ $ev == 0 ]
 then
@@ -347,6 +349,8 @@ Remove" > $workDir/.tmp$START/cochlea.praat
 
 $dirpraat --run $workDir/.tmp$START/cochlea.praat $soundpath $seg
 
+# ---------------------------------------------
+### LISP ###        PRAAT TEXTGRID SEGMENTATION
 # ---------------------------------------------
 echo ";; read loudness profile file
 
@@ -588,6 +592,9 @@ $dirsbcl --script $workDir/.tmp$START/segmentation.lisp
 # ---------------------------------------------
 fi
 
+# ---------------------------------------------
+### PRAAT ###                    PRAAT ANALYSIS
+# ---------------------------------------------
 if [ $out != 4 ]
 then
 # script PRAAT
@@ -799,6 +806,8 @@ fi
 fi
 
 # ---------------------------------------------
+### LISP ###                     CLASSIFICATION
+# ---------------------------------------------
 if [ $out == 1 ] || [ $out == 2 ] || [ $out == 3 ]
 then
 echo $readfile > $workDir/.tmp$START/encode.lisp
@@ -916,7 +925,7 @@ echo "(defparameter *data* (mapcar #'string-to-list (read-text-lines \"$workDir/
 			     (make-list 5 :initial-element '$rec)
 			     (error \"The argument has to be a list of 5 positive numbers or a positive number.\"))))
 (mk-file \"$workDir/.tmp$START/code\" (mapcar #'flatten (mat-trans (loop for data in (mat-trans *data*) for coef in *coef* collect (mk-attract-class data coef $out)))))
-(mk-file \"$workDir/.tmp$START/alist\" (reverse *alist*) 0)" >> $workDir/.tmp$START/encode.lisp
+(mk-file \"$workDir/.tmp$START/alist\" (reverse *alist*))" >> $workDir/.tmp$START/encode.lisp
 
 $dirsbcl --script $workDir/.tmp$START/encode.lisp
 fi
@@ -961,7 +970,7 @@ echo ";; format data to a valid sequence
 ;; standard deviation
 
 (defun mean (lst) (/ (reduce #'+ lst) (length lst)))
-(defun normalize (lst)(let ((maxval (reduce #'max lst))) (loop for i in lst collect (/ i maxval))))
+(defun normalize (lst) (let ((maxval (reduce #'max lst))) (loop for i in lst collect (/ i maxval))))
 (defun std-dev (lst) (let ((meanval (mean lst))) (sqrt (/ (loop for i in lst sum (expt (- i meanval) 2)) (length lst)))))
 
 ;;-----------------------------------" >> $workDir/.tmp$START/roughness.lisp
