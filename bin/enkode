@@ -1,6 +1,6 @@
 #!/bin/bash
 ######################################################
-# enkode - version 7.0 alpha
+# enkode - version 7.1 alpha
 # author: Yann Ics (by.cmsc@gmail.com)
 # requires: Praat, SBCL, zip, bc
 ######################################################
@@ -20,7 +20,7 @@ usage(){
 }
 
 version(){
-    echo "Version 7.0 alpha"
+    echo "Version 7.1 alpha"
 }
 
 get_abs_filename() {
@@ -318,6 +318,9 @@ while 'tps' < '.td'
   tps = a*0.01
   To Excitation (slice): 'tps'
   dat = do(\"Get loudness\")
+  if (dat = undefined)
+      dat = 1.6
+  endif
   fileappend 'defaultDirectory$'/'.file$' 'dat' 'newline$'
   selectObject: \"Excitation cochlea\"
   Remove
@@ -676,6 +679,9 @@ echo "procedure mk_roughness .sound$
   		rtps = ra*$tsra
   		To Excitation (slice): 'rtps'
   		rdat = do(\"Get loudness\")
+		if (rdat = undefined)
+    	            rdat = 1.6
+                endif
 	        fileappend 'defaultDirectory$'/rprof 'rdat'	
   		selectObject: \"Excitation cochlea\"
   		Remove
@@ -695,6 +701,9 @@ echo "procedure mk_loudness .sound$
 			select Cochleagram '.sound$'
 			To Excitation (slice): 'tps'
 			loudness = Get loudness
+                        if (loudness = undefined)
+    	                    loudness = 1.6
+                        endif
 			array [i] = 'loudness'
 			tps = 'tps' + 0.01
 			i = 'i' + 1

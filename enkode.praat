@@ -69,6 +69,9 @@ procedure mk_loudness .sound$
 		select Cochleagram '.sound$'
 		To Excitation (slice): 'tps'
 		loudness = Get loudness
+        if (loudness = undefined)
+    	        loudness = 1.6
+        endif
 		array [i] = 'loudness'
 		tps = 'tps' + 0.01
 		i = 'i' + 1
