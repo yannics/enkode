@@ -887,7 +887,7 @@ echo ";; convert to thrifty code
 
 (defun mk-attract (lst n &optional r)
   (if (< (length (remove-duplicates lst)) (1- (expt 2 n))) (mk-attract lst (1- n))
-      (if (>= (length (car r)) (1- (expt 2 n))) (sort (car r) #'>)
+      (if (>= (length (car r)) (1- (expt 2 n))) (sort (car (copy-list r)) #'>)
 	  (let ((ll (loop for i in (if (null r) (list lst) (cadr r)) collect (split-mean-lst i))))
 	    (mk-attract lst n (list (remove-duplicates (union (flat-once (mapcar #'car ll)) (car r))) (flat-once (mapcar #'cadr ll))))))))
 
